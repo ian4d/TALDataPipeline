@@ -1,0 +1,18 @@
+{
+  "name": "Ira Glass",
+  "statements": [
+    {
+      "role": "host",
+      "episode-number": 1,
+      "episode-name": "title",
+      "act-number": 1,
+      "act-name": "act"
+      "timestamp": 00:00:00.94,
+      "text": "If you think about it, it's a strange thing for a very rich man to do to run for president because it means throwing yourself into a thousand tedious and potentially demeaning situations. For instance, you show up at a debate with the other millionaires who are running for president, and you try to make a joke out of the negative ads they are running against you. "
+      "You didn't even use a good picture of me,"
+      " you protest, "
+      "so I brought you some pictures."
+      " You wave a few snapshots into the air. You try to turn this debate into something on your own terms. You try to seize the moment."
+    }
+  ]
+}
