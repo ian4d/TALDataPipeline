@@ -13,7 +13,13 @@ public class BlogEpisodeContributor {
     private Map<Integer, String> episodes;
     private List<String> statements;
     private Set<String> spokenWords;
+    private String url;
 
+    /**
+     * Constructor.
+     *
+     * @param name Name of the contributor.
+     */
     public BlogEpisodeContributor(String name) {
         this.name = name;
         this.episodes = new HashMap<>();
@@ -29,23 +35,31 @@ public class BlogEpisodeContributor {
         return episodes;
     }
 
-    public List<String> getStatements() {
-        return statements;
-    }
-
-    public Set<String> getSpokenWords() {
-        return spokenWords;
-    }
-
     public void setEpisodes(Map<Integer, String> episodes) {
         this.episodes = episodes;
+    }
+
+    public List<String> getStatements() {
+        return statements;
     }
 
     public void setStatements(List<String> statements) {
         this.statements = statements;
     }
 
+    public Set<String> getSpokenWords() {
+        return spokenWords;
+    }
+
     public void setSpokenWords(Set<String> spokenWords) {
         this.spokenWords = spokenWords;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

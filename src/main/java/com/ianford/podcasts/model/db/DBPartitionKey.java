@@ -15,13 +15,19 @@ public enum DBPartitionKey {
      * - Sort: EP#LATEST
      */
     PODCAST_NAME("TAL",
-                 "TAL"),
+            "TAL"),
 
     /**
      * Episode specific data is stored using this primary key in combination with a variety of members of DBSortKey.
      */
     EPISODE_NUMBER("TAL#EP_%s",
-                   "TAL\\#EP_(\\d+)");
+            "TAL\\#EP_(\\d+)"),
+
+    /**
+     * Primarily used to model statements by contributors
+     */
+    CONTRIBUTOR("CONTRIBUTOR#%s",
+            "CONTRIBUTOR\\#([\\w_]+)");
 
 
     private final String value;
@@ -33,13 +39,25 @@ public enum DBPartitionKey {
         this.pattern = Pattern.compile(regExPattern);
     }
 
+    /**
+     * Returns the type of Key represented by the input
+     *
+     * @param keyValue
+     * @return
+     */
+    public static Optional<DBSortKey> resolveKeyType(String keyValue) {
+        return Arrays.stream(DBSortKey.values())
+                .filter(key -> key.matches(keyValue))
+                .findFirst();
+    }
+
     public String getValue() {
         return value;
     }
 
     public String format(Object... args) {
         return String.format(value,
-                             args);
+                args);
     }
 
     /**
@@ -61,17 +79,5 @@ public enum DBPartitionKey {
      */
     public Matcher matcher(String value) {
         return this.pattern.matcher(value);
-    }
-
-    /**
-     * Returns the type of Key represented by the input
-     *
-     * @param keyValue
-     * @return
-     */
-    public static Optional<DBSortKey> resolveKeyType(String keyValue) {
-        return Arrays.stream(DBSortKey.values())
-                .filter(key -> key.matches(keyValue))
-                .findFirst();
     }
 }

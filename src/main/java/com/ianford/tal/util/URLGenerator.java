@@ -21,6 +21,7 @@ public class URLGenerator implements Function<Integer, String> {
 
     @Override
     public String apply(Integer episodeNum) {
-        return String.format(urlFormat, episodeNum);
+        return String.format(urlFormat,
+                episodeNum);
     }
 }

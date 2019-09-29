@@ -1,5 +1,6 @@
 package com.ianford.tal.steps;
 
+import com.github.slugify.Slugify;
 import com.ianford.podcasts.model.ParsedEpisode;
 import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import com.ianford.tal.model.PipelineConfig;
@@ -34,6 +35,7 @@ public class CreateBlogPostStep implements PipelineStep {
                     String newPostFilename = writePostToLocalRepository(
                             pipelineConfig.getWorkingDirectory()
                                     .resolve(pipelineConfig.getLocalPostsDirectory()),
+                            episode.getEpisodeTitle(),
                             postContent);
                 }
             }
@@ -72,11 +74,13 @@ public class CreateBlogPostStep implements PipelineStep {
      *
      * @throws IOException Thrown if writing the post fails.
      */
-    private String writePostToLocalRepository(Path postDirectory, String postContent) throws IOException {
+    private String writePostToLocalRepository(Path postDirectory, String episodeTitle, String postContent)
+            throws IOException {
         String postFilenameDatePrefix = LocalDateTime.now()
                 .format(DateTimeFormatter.ISO_LOCAL_DATE);
-        // TODO: Generate post filename from details about actual episode being committed
-        String postFilenameTitleInfix = "this-is-a-title";
+        String postFilenameTitleInfix = Slugify.builder()
+                .build()
+                .slugify(episodeTitle);
         String newPostFilename = String.format("%s-%s.md",
                 postFilenameDatePrefix,
                 postFilenameTitleInfix);
@@ -98,7 +102,6 @@ public class CreateBlogPostStep implements PipelineStep {
         tokenMap.put("layout",
                 "post");
 
-        // TODO: Set post title based on episode being parsed
         tokenMap.put("title",
                 episode.getEpisodeTitle());
 

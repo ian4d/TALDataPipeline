@@ -12,6 +12,11 @@ public class BlogEpisodeAct {
     private Map<String, BlogEpisodeContributor> contributorMap;
     private List<BlogEpisodeStatement> blogEpisodeStatementList;
 
+    /**
+     * Represents a single act in the episode for the blog.
+     *
+     * @param actNumber The number of the act.
+     */
     public BlogEpisodeAct(int actNumber) {
         this.actNumber = actNumber;
         this.contributorMap = new HashMap<>();
@@ -26,20 +31,20 @@ public class BlogEpisodeAct {
         return actName;
     }
 
-    public Map<String, BlogEpisodeContributor> getContributorMap() {
-        return contributorMap;
-    }
-
-    public List<BlogEpisodeStatement> getStatementList() {
-        return blogEpisodeStatementList;
-    }
-
     public void setActName(String actName) {
         this.actName = actName;
     }
 
+    public Map<String, BlogEpisodeContributor> getContributorMap() {
+        return contributorMap;
+    }
+
     public void setContributorMap(Map<String, BlogEpisodeContributor> contributorMap) {
         this.contributorMap = contributorMap;
+    }
+
+    public List<BlogEpisodeStatement> getStatementList() {
+        return blogEpisodeStatementList;
     }
 
     public void setStatementList(List<BlogEpisodeStatement> blogEpisodeStatementList) {

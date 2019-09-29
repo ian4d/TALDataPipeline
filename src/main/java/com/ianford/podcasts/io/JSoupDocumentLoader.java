@@ -21,10 +21,12 @@ public class JSoupDocumentLoader implements Function<String, Document> {
     @Override
     public Document apply(String filePath) {
         try {
-            return Jsoup.parse(new File(filePath), Charset.defaultCharset()
-                    .name());
+            return Jsoup.parse(new File(filePath),
+                    Charset.defaultCharset()
+                            .name());
         } catch (IOException e) {
-            logger.error("Error parsing file", e);
+            logger.error("Error parsing file",
+                    e);
         }
         return null;
     }

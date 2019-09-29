@@ -143,3 +143,7 @@ _data/
 # Used by docker compose, stores secrets
 .env
 .gitignore
+.idea/
+docker/
+gradle/
+gradlew.bat

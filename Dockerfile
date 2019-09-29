@@ -7,6 +7,7 @@ COPY settings.gradle .
 COPY gradle gradle
 COPY gradlew gradlew
 COPY src ./src
+COPY .env ./.env
 RUN mkdir -p _data/downloads/raw
 RUN mkdir -p _data/episodes
 RUN mkdir -p _data/contributors

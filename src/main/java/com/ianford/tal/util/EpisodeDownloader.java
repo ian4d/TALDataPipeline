@@ -17,6 +17,7 @@ public class EpisodeDownloader {
 
     private final URLGenerator urlGenerator;
     private final Predicate<String> existingFilePredicate;
+    private final String filenameFormat;
 
     /**
      * Constructor.
@@ -85,9 +86,6 @@ public class EpisodeDownloader {
                 outputPath);
         return outputPath;
     }
-
-
-    private final String filenameFormat;
 
     private Path generatePath(int episodeNum, Path destinationFolder) {
         String fileName = String.format(filenameFormat,

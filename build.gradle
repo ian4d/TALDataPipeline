@@ -46,6 +46,8 @@ dependencies {
     // Used to build model locally
     implementation 'com.amazonaws:DynamoDBLocal:[1.12,2.0)'
     implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.github.slugify:slugify:3.0.2'
+    implementation 'io.github.cdimascio:dotenv-java:2.3.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testImplementation 'org.apache.commons:commons-lang3:3.12.0'

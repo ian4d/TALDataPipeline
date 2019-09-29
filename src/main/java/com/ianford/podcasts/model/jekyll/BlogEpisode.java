@@ -6,17 +6,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Models episode data configured to be published to my Jekyll blog.
+ */
 public class BlogEpisode {
 
     private final int episodeNumber;
+    private final List<BlogEpisodeStatement> blogEpisodeStatementList;
     private String episodeTitle;
-
     private Map<String, BlogEpisodeContributor> contributorMap;
-
     private Map<Integer, BlogEpisodeAct> actMap;
 
-    private final List<BlogEpisodeStatement> blogEpisodeStatementList;
-
+    /**
+     * Constructor.
+     *
+     * @param episodeNumber The number of the episode being modeled.
+     */
     public BlogEpisode(int episodeNumber) {
         this.episodeNumber = episodeNumber;
         this.contributorMap = new HashMap<>();
@@ -32,20 +37,20 @@ public class BlogEpisode {
         return episodeTitle;
     }
 
-    public Map<String, BlogEpisodeContributor> getContributorMap() {
-        return contributorMap;
-    }
-
-    public Map<Integer, BlogEpisodeAct> getActMap() {
-        return actMap;
-    }
-
     public void setEpisodeTitle(String episodeTitle) {
         this.episodeTitle = episodeTitle;
     }
 
+    public Map<String, BlogEpisodeContributor> getContributorMap() {
+        return contributorMap;
+    }
+
     public void setContributorMap(Map<String, BlogEpisodeContributor> contributorMap) {
         this.contributorMap = contributorMap;
+    }
+
+    public Map<Integer, BlogEpisodeAct> getActMap() {
+        return actMap;
     }
 
     public void setActMap(Map<Integer, BlogEpisodeAct> actMap) {
@@ -66,7 +71,7 @@ public class BlogEpisode {
 
     }
 
-    private static class Summary {
+    public static class Summary {
 
         private final String number;
         private final String title;
