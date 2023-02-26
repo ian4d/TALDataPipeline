@@ -39,17 +39,18 @@ public class PipelineModule extends PrivateModule {
      * Provides steps that will be executed as part of the pipeline
      */
     @Provides
-    List<PipelineStep> providePipelineSteps(DownloadEpisodeStep downloadEpisodeStep,
-                                            PrepareDBStep prepareDBStep,
-                                            PersistModelStep persistModelStep,
-                                            BuildContributorModelStep buildContributorModelStep,
-                                            BuildNLPModelStep buildNLPModelStep,
-                                            ExportContributorPagesStep exportContributorPagesStep,
-                                            BuildEpisodeModelStep buildEpisodeModelStep) {
+    List<PipelineStep> providePipelineSteps(DownloadEpisodeStep downloadEpisodeStep
+//                                            PrepareDBStep prepareDBStep,
+//                                            PersistModelStep persistModelStep,
+//                                            BuildContributorModelStep buildContributorModelStep,
+//                                            BuildNLPModelStep buildNLPModelStep,
+//                                            ExportContributorPagesStep exportContributorPagesStep,
+//                                            BuildEpisodeModelStep buildEpisodeModelStep
+    ) {
         List<PipelineStep> steps = new ArrayList<>();
 
         // Download any new/missing episodes
-        //steps.add(downloadEpisodeStep);
+        steps.add(downloadEpisodeStep);
 
         // Prepare DB
         //steps.add(prepareDBStep);
@@ -65,7 +66,7 @@ public class PipelineModule extends PrivateModule {
 
         //steps.add(buildNLPModelStep);
 
-        steps.add(buildEpisodeModelStep);
+//        steps.add(buildEpisodeModelStep);
 
         return steps;
     }

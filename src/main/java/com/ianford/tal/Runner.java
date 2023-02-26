@@ -53,9 +53,10 @@ class Runner {
         return Guice.createInjector(
                 new PropertiesModule(configPath),
                 new PipelineModule(),
-                new EpisodeDataModule(),
-                new DatabaseModule(),
-                new NLPDataModule(),
-                new ContributorDataModule());
+                new EpisodeDataModule()
+//                new DatabaseModule(),
+//                new NLPDataModule(),
+//                new ContributorDataModule()
+        );
     }
 }

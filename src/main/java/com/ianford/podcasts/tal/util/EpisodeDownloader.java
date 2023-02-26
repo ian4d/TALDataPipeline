@@ -49,7 +49,7 @@ public class EpisodeDownloader implements Function<Integer, String> {
         Document document = Jsoup.connect(episodeURL)
                 .userAgent("Mozilla/5.0 (Windows NT 6.2; WOW64; rv:29.0) Gecko/20100101 Firefox/29.0")
                 .ignoreHttpErrors(true)
-                .validateTLSCertificates(true)
+//                .validateTLSCertificates(true)
                 .followRedirects(true)
                 .timeout(60000)
                 .get();

@@ -17,7 +17,7 @@ public class RawContentDownloader implements UnaryOperator<String> {
                     .connect(episodeURL)
                     .userAgent(DEFAULT_USER_AGENT)
                     .ignoreHttpErrors(true)
-                    .validateTLSCertificates(true)
+//                    .validateTLSCertificates(true)
                     .followRedirects(true)
                     .get();
             return document.toString();
