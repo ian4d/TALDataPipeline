@@ -59,9 +59,12 @@ public class ContributorDataModule extends PrivateModule {
     @Exposed
     BuildContributorModelStep provideBuildContributorsModelStep(PropertiesProvider propertiesProvider,
                                                                 FileSaver fileSaver,
-                                                                @Named(NamedInjections.RECORD_STREAM_FUNCTION) Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,
-                                                                @Named(NamedInjections.NAME_STREAM_SUPPLIER) Supplier<Stream<String>> staffNameStreamSupplier,
-                                                                @Named(NamedInjections.NAME_NORMALIZER) Function<String, String> nameNormalizer) {
+                                                                @Named(NamedInjections.RECORD_STREAM_FUNCTION)
+                                                                Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,
+                                                                @Named(NamedInjections.NAME_STREAM_SUPPLIER)
+                                                                Supplier<Stream<String>> staffNameStreamSupplier,
+                                                                @Named(NamedInjections.NAME_NORMALIZER)
+                                                                Function<String, String> nameNormalizer) {
         return new BuildContributorModelStep(propertiesProvider, fileSaver, staffRecordStreamFunction,
                 staffNameStreamSupplier,
                 nameNormalizer);
@@ -79,11 +82,15 @@ public class ContributorDataModule extends PrivateModule {
     @Provides
     @Exposed
     ExportContributorPagesStep provideExportContributorPagesStep(PropertiesProvider propertiesProvider,
-                                                                 @Named(NamedInjections.FILE_SAVER) BiConsumer<String, String> fileSaver,
+                                                                 @Named(NamedInjections.FILE_SAVER)
+                                                                 BiConsumer<String, String> fileSaver,
                                                                  FileLoader fileLoader,
-                                                                 @Named(NamedInjections.RECORD_STREAM_FUNCTION) Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,
-                                                                 @Named(NamedInjections.NAME_STREAM_SUPPLIER) Supplier<Stream<String>> staffNameStreamSupplier,
-                                                                 @Named(NamedInjections.NAME_NORMALIZER) Function<String, String> staffNameNormalizer
+                                                                 @Named(NamedInjections.RECORD_STREAM_FUNCTION)
+                                                                 Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,
+                                                                 @Named(NamedInjections.NAME_STREAM_SUPPLIER)
+                                                                 Supplier<Stream<String>> staffNameStreamSupplier,
+                                                                 @Named(NamedInjections.NAME_NORMALIZER)
+                                                                 Function<String, String> staffNameNormalizer
     ) {
         return new ExportContributorPagesStep(propertiesProvider, fileSaver, fileLoader, staffRecordStreamFunction,
                 staffNameStreamSupplier, staffNameNormalizer);

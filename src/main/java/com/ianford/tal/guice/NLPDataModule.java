@@ -52,7 +52,8 @@ public class NLPDataModule extends PrivateModule {
     BuildEpisodeModelStep provideEpisodeModelBuildingStep(
             PropertiesProvider propertiesProvider,
             @Named(NamedInjections.EPISODE_NUMBER_SUPPLIER) Supplier<Stream<String>> episodeNumberStreamSupplier,
-            @Named(NamedInjections.EPISODE_RECORD_FUNCTION) Function<Integer, Stream<EpisodeRecord>> episodeRecordFunction,
+            @Named(NamedInjections.EPISODE_RECORD_FUNCTION)
+            Function<Integer, Stream<EpisodeRecord>> episodeRecordFunction,
             @Named(NamedInjections.FILE_SAVER) BiConsumer<String, String> fileSaver
     ) {
         return new BuildEpisodeModelStep(propertiesProvider, episodeNumberStreamSupplier, episodeRecordFunction,

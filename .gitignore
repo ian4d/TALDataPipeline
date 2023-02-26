@@ -137,4 +137,5 @@ gradle-app.setting
 ### Gradle Patch ###
 **/build/
 
-# End of https://www.gitignore.io/api/osx,gradle,intellij
+# End of https://www.gitignore.io/api/osx,gradle,intellij\
+data/

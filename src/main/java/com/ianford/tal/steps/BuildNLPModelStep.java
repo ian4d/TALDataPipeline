@@ -6,7 +6,13 @@ import com.ianford.tal.config.PropertiesProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -88,7 +94,7 @@ public class BuildNLPModelStep implements PipelineStep {
                     }
 
                     if (Collections.max(embedding) >= 0) {
-                        String result = String.format("%s, %s", staffName, embedding.toString());
+                        String result = String.format("%s, %s", staffName, embedding);
                         finalOutput.add(result);
                     }
 

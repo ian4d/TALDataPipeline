@@ -1,6 +1,10 @@
 package com.ianford.tal.guice;
 
-import com.google.inject.*;
+import com.google.inject.Exposed;
+import com.google.inject.Key;
+import com.google.inject.PrivateModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import com.ianford.podcasts.io.FileLoader;
 import com.ianford.tal.config.PropertiesProvider;

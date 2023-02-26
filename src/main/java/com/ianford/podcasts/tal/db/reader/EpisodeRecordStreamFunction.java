@@ -26,7 +26,8 @@ public class EpisodeRecordStreamFunction implements Function<Integer, Stream<Epi
     @Override
     public Stream<EpisodeRecord> apply(Integer episodeNumber) {
         try {
-            return queryRunner.query("SELECT * FROM tal.full_view WHERE episode_number=? ORDER BY timestamp", resultSetHandler, episodeNumber);
+            return queryRunner.query("SELECT * FROM tal.full_view WHERE episode_number=? ORDER BY timestamp",
+                    resultSetHandler, episodeNumber);
         } catch (SQLException e) {
             logger.error("Exception while running query", e);
         }

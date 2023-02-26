@@ -20,6 +20,7 @@ public class BuildEpisodeModelStep implements PipelineStep {
 
     /**
      * Constructor
+     *
      * @param propertiesProvider
      * @param episodeNumberStreamSupplier
      * @param episodeRecordFunction

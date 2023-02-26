@@ -2,8 +2,15 @@ package com.ianford.tal;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.ianford.tal.guice.*;
-import org.apache.commons.cli.*;
+import com.ianford.tal.guice.EpisodeDataModule;
+import com.ianford.tal.guice.PipelineModule;
+import com.ianford.tal.guice.PropertiesModule;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

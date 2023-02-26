@@ -106,7 +106,6 @@ public class EpisodeDataModule extends PrivateModule {
     }
 
 
-
     /**
      * Provides a step that is used to download new episodes locally
      *

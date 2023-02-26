@@ -5,16 +5,25 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.ianford.podcasts.io.FileLoader;
 import com.ianford.podcasts.io.FileSaver;
 import com.ianford.podcasts.model.EpisodeRecord;
-import com.ianford.podcasts.tal.db.reader.*;
-import com.ianford.podcasts.tal.db.writer.*;
+import com.ianford.podcasts.tal.db.reader.EpisodeNumberResultSetHandler;
+import com.ianford.podcasts.tal.db.reader.EpisodeNumberStreamSupplier;
+import com.ianford.podcasts.tal.db.reader.EpisodeRecordResultSetHandler;
+import com.ianford.podcasts.tal.db.reader.EpisodeRecordStreamFunction;
+import com.ianford.podcasts.tal.db.reader.StaffNameResultSetHandler;
+import com.ianford.podcasts.tal.db.reader.StaffNameStreamSupplier;
+import com.ianford.podcasts.tal.db.reader.StaffRecordStreamFunction;
+import com.ianford.podcasts.tal.db.reader.StaffWordStreamSupplier;
+import com.ianford.podcasts.tal.db.writer.ActWriter;
+import com.ianford.podcasts.tal.db.writer.DatabaseWriter;
+import com.ianford.podcasts.tal.db.writer.EpisodeWriter;
+import com.ianford.podcasts.tal.db.writer.PersonWriter;
+import com.ianford.podcasts.tal.db.writer.RecordWriter;
 import com.ianford.podcasts.tal.file.EpisodeRecordListBuilder;
 import com.ianford.tal.data.DatabaseProperties;
 import com.ianford.tal.guice.constants.NamedInjections;
 import com.ianford.tal.steps.PersistModelStep;
-import com.ianford.tal.steps.PrepareDBStep;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -143,7 +152,8 @@ public class DatabaseModule extends PrivateModule {
     @Provides
     @Named(NamedInjections.RECORD_STREAM_FUNCTION)
     Function<String, Stream<EpisodeRecord>> provideStaffRecordStreamFunction(QueryRunner queryRunner,
-                                                                             @Named(NamedInjections.EPISODE_RECORD_RESULT_SET_HANDLER) ResultSetHandler<Stream<EpisodeRecord>> episodeRecordResultSetHandler) {
+                                                                             @Named(NamedInjections.EPISODE_RECORD_RESULT_SET_HANDLER)
+                                                                             ResultSetHandler<Stream<EpisodeRecord>> episodeRecordResultSetHandler) {
         return new StaffRecordStreamFunction(queryRunner, episodeRecordResultSetHandler);
     }
 
@@ -153,7 +163,8 @@ public class DatabaseModule extends PrivateModule {
     @Named(NamedInjections.WORD_STREAM_SUPPLIER)
     Supplier<Stream<String>> provideStaffWordStreamSuppler(
             @Named(NamedInjections.NAME_STREAM_SUPPLIER) Supplier<Stream<String>> staffNameStreamSupplier,
-            @Named(NamedInjections.RECORD_STREAM_FUNCTION) Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction) {
+            @Named(NamedInjections.RECORD_STREAM_FUNCTION)
+            Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction) {
         // TODO: Define actual blacklist, improve on this method
         return new StaffWordStreamSupplier(staffNameStreamSupplier, staffRecordStreamFunction, new ArrayList<>());
     }
@@ -171,7 +182,8 @@ public class DatabaseModule extends PrivateModule {
     @Provides
     @Named(NamedInjections.EPISODE_RECORD_FUNCTION)
     Function<Integer, Stream<EpisodeRecord>> provideEpisodeRecordFunction(QueryRunner queryRunner,
-                                                                          @Named(NamedInjections.EPISODE_RECORD_RESULT_SET_HANDLER) ResultSetHandler<Stream<EpisodeRecord>> episodeRecordResultSetHandler) {
+                                                                          @Named(NamedInjections.EPISODE_RECORD_RESULT_SET_HANDLER)
+                                                                          ResultSetHandler<Stream<EpisodeRecord>> episodeRecordResultSetHandler) {
         return new EpisodeRecordStreamFunction(queryRunner, episodeRecordResultSetHandler);
     }
 
@@ -187,14 +199,6 @@ public class DatabaseModule extends PrivateModule {
                                              DatabaseWriter dbWriter) {
         return new PersistModelStep(episodeRecordListBuilder,
                 dbWriter);
-    }
-
-    @Provides
-    @Exposed
-    @Singleton
-    PrepareDBStep providePrepareDBStep(FileLoader fileLoader, Connection connection) {
-        return new PrepareDBStep(fileLoader.apply("./sql/prepare_db.sql"),
-                connection);
     }
 
     @Provides

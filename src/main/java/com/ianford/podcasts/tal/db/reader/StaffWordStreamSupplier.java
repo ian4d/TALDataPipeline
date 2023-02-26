@@ -24,7 +24,8 @@ public class StaffWordStreamSupplier implements Supplier<Stream<String>> {
 
     public StaffWordStreamSupplier(
             @Named(NamedInjections.NAME_STREAM_SUPPLIER) Supplier<Stream<String>> staffNameStreamSupplier,
-            @Named(NamedInjections.RECORD_STREAM_FUNCTION) Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,
+            @Named(NamedInjections.RECORD_STREAM_FUNCTION)
+            Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,
             Collection<String> blackList) {
         this.staffNameStreamSupplier = staffNameStreamSupplier;
         this.staffRecordStreamFunction = staffRecordStreamFunction;

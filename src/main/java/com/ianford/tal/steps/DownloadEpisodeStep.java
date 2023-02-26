@@ -13,8 +13,6 @@ import java.util.List;
 public class DownloadEpisodeStep implements PipelineStep {
 
     private static final Logger logger = LogManager.getLogger();
-
-
     private final EpisodeDownloader episodeDownloader;
     private final MissingEpisodeFinder missingEpisodeFinder;
 

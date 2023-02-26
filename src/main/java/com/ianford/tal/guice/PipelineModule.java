@@ -4,7 +4,8 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.ianford.tal.Pipeline;
-import com.ianford.tal.steps.*;
+import com.ianford.tal.steps.DownloadEpisodeStep;
+import com.ianford.tal.steps.PipelineStep;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,7 +41,6 @@ public class PipelineModule extends PrivateModule {
      */
     @Provides
     List<PipelineStep> providePipelineSteps(DownloadEpisodeStep downloadEpisodeStep
-//                                            PrepareDBStep prepareDBStep,
 //                                            PersistModelStep persistModelStep,
 //                                            BuildContributorModelStep buildContributorModelStep,
 //                                            BuildNLPModelStep buildNLPModelStep,
@@ -51,9 +51,6 @@ public class PipelineModule extends PrivateModule {
 
         // Download any new/missing episodes
         steps.add(downloadEpisodeStep);
-
-        // Prepare DB
-        //steps.add(prepareDBStep);
 
         // Store Data
         //steps.add(persistModelStep);

@@ -35,8 +35,8 @@ public class ActWriter implements Consumer<EpisodeRecord> {
      * mysql> describe acts; +----------------+--------------+------+-----+---------+-------+ | Field          | Type |
      * Null | Key | Default | Extra | +----------------+--------------+------+-----+---------+-------+ | episode_number
      * | int(11)      | NO   | PRI | NULL    |       | | act_number     | int(11)      | NO   | PRI | NULL    |       |
-     * | name           | varchar(150) | NO   |     | NULL    |       | +----------------+--------------+------+-----+---------+-------+
-     * 3 rows in set (0.00 sec)
+     * | name           | varchar(150) | NO   |     | NULL    |       |
+     * +----------------+--------------+------+-----+---------+-------+ 3 rows in set (0.00 sec)
      */
     public void accept(EpisodeRecord episodeRecord) {
         try {
