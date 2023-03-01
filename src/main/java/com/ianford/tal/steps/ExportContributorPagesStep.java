@@ -1,6 +1,7 @@
 package com.ianford.tal.steps;
 
 import com.ianford.podcasts.io.FileLoader;
+import com.ianford.podcasts.io.FileSaver;
 import com.ianford.podcasts.model.EpisodeRecord;
 import com.ianford.tal.config.PropertiesProvider;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +20,7 @@ public class ExportContributorPagesStep implements PipelineStep {
     private static final Logger logger = LogManager.getLogger();
 
     private final PropertiesProvider propertiesProvider;
-    private final BiConsumer<String, String> fileSaver;
+    private final FileSaver fileSaver;
     private final FileLoader fileLoader;
     private final Function<String, Stream<EpisodeRecord>> staffRecordFunction;
     private final Supplier<Stream<String>> staffNameStreamSupplier;
@@ -35,7 +36,7 @@ public class ExportContributorPagesStep implements PipelineStep {
      * @param staffNameStreamSupplier Used to acquire a Stream of the name of every staff member
      * @param staffNameNormalizer     Used to normalize staff names
      */
-    public ExportContributorPagesStep(PropertiesProvider propertiesProvider, BiConsumer<String, String> fileSaver,
+    public ExportContributorPagesStep(PropertiesProvider propertiesProvider, FileSaver fileSaver,
                                       FileLoader fileLoader,
                                       Function<String, Stream<EpisodeRecord>> staffRecordFunction,
                                       Supplier<Stream<String>> staffNameStreamSupplier,

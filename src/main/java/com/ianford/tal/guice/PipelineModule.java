@@ -41,7 +41,6 @@ public class PipelineModule extends PrivateModule {
      */
     @Provides
     List<PipelineStep> providePipelineSteps(DownloadEpisodeStep downloadEpisodeStep
-//                                            PersistModelStep persistModelStep,
 //                                            BuildContributorModelStep buildContributorModelStep,
 //                                            BuildNLPModelStep buildNLPModelStep,
 //                                            ExportContributorPagesStep exportContributorPagesStep,
@@ -51,9 +50,6 @@ public class PipelineModule extends PrivateModule {
 
         // Download any new/missing episodes
         steps.add(downloadEpisodeStep);
-
-        // Store Data
-        //steps.add(persistModelStep);
 
         // Build the Contributor Model
         //steps.add(buildContributorModelStep);

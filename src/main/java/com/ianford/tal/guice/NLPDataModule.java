@@ -3,6 +3,7 @@ package com.ianford.tal.guice;
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
+import com.ianford.podcasts.io.FileSaver;
 import com.ianford.podcasts.model.EpisodeRecord;
 import com.ianford.tal.config.PropertiesProvider;
 import com.ianford.tal.guice.constants.NamedInjections;
@@ -12,7 +13,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.inject.Named;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -54,7 +54,7 @@ public class NLPDataModule extends PrivateModule {
             @Named(NamedInjections.EPISODE_NUMBER_SUPPLIER) Supplier<Stream<String>> episodeNumberStreamSupplier,
             @Named(NamedInjections.EPISODE_RECORD_FUNCTION)
             Function<Integer, Stream<EpisodeRecord>> episodeRecordFunction,
-            @Named(NamedInjections.FILE_SAVER) BiConsumer<String, String> fileSaver
+            FileSaver fileSaver
     ) {
         return new BuildEpisodeModelStep(propertiesProvider, episodeNumberStreamSupplier, episodeRecordFunction,
                 fileSaver);

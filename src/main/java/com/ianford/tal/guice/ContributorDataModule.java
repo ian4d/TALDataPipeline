@@ -82,8 +82,7 @@ public class ContributorDataModule extends PrivateModule {
     @Provides
     @Exposed
     ExportContributorPagesStep provideExportContributorPagesStep(PropertiesProvider propertiesProvider,
-                                                                 @Named(NamedInjections.FILE_SAVER)
-                                                                 BiConsumer<String, String> fileSaver,
+                                                                 FileSaver fileSaver,
                                                                  FileLoader fileLoader,
                                                                  @Named(NamedInjections.RECORD_STREAM_FUNCTION)
                                                                  Function<String, Stream<EpisodeRecord>> staffRecordStreamFunction,

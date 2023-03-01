@@ -11,7 +11,4 @@ public class NamedInjections {
     public static final String EPISODE_NUMBER_SUPPLIER = "EpisodeNumberSupplier";
     public static final String EPISODE_RECORD_FUNCTION = "EpisodeRecordFunction";
 
-    public static final String EPISODE_RECORD_RESULT_SET_HANDLER = "EpisodeRecordResultSetHandler";
-
-    public static final String FILE_SAVER = "FileSaver";
 }

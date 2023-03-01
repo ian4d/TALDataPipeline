@@ -27,5 +27,10 @@ public class DynamoDBModule extends PrivateModule {
                 .endpointOverride(URI.create("http://localhost:8000"))
                 .region(Region.US_WEST_2)
                 .build();
+
     }
+
+    DynamoDBMapp
+
+
 }
