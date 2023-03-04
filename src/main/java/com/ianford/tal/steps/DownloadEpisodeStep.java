@@ -1,8 +1,8 @@
 package com.ianford.tal.steps;
 
 import com.ianford.podcasts.model.BasicEpisodeRecord;
+import com.ianford.podcasts.model.DBKey;
 import com.ianford.podcasts.tal.util.EpisodeDownloader;
-import com.ianford.podcasts.tal.util.MissingEpisodeFinder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -17,32 +17,30 @@ public class DownloadEpisodeStep implements PipelineStep {
 
     private static final Logger logger = LogManager.getLogger();
     private final EpisodeDownloader episodeDownloader;
-    private final MissingEpisodeFinder missingEpisodeFinder;
 
     private final DynamoDbTable<BasicEpisodeRecord> table;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param episodeDownloader    Used to download specific episodes
-     * @param missingEpisodeFinder Used to identify episodes that are currently missing from the data set
-     * @param table
+     * @param episodeDownloader Used to download specific episodes.
+     * @param table             Used to identify the last episode we parsed.
      */
-    public DownloadEpisodeStep(EpisodeDownloader episodeDownloader, MissingEpisodeFinder missingEpisodeFinder,
-                               DynamoDbTable<BasicEpisodeRecord> table) {
+    @SuppressWarnings("unused")
+    public DownloadEpisodeStep(EpisodeDownloader episodeDownloader, DynamoDbTable<BasicEpisodeRecord> table) {
         this.episodeDownloader = episodeDownloader;
-        this.missingEpisodeFinder = missingEpisodeFinder;
         this.table = table;
     }
 
 
+    @SuppressWarnings("unused")
     @Override
     public void run() {
         logger.info("Downloading missing episodes");
 
         BasicEpisodeRecord record = table.getItem(Key.builder()
-                .partitionValue("TAL")
-                .sortValue("EP#LATEST")
+                .partitionValue(DBKey.PARTITION.getValue())
+                .sortValue(DBKey.LATEST_EPISODE.getValue())
                 .build());
 
         int latestEpNumber = Optional.ofNullable(record)
@@ -51,7 +49,8 @@ public class DownloadEpisodeStep implements PipelineStep {
                 .map(latest -> latest + 1)
                 .orElseGet(() -> 1);
 
-        table.updateItem(new BasicEpisodeRecord("TAL", "EP#LATEST", String.valueOf(latestEpNumber)));
+        table.updateItem(new BasicEpisodeRecord(DBKey.PARTITION.getValue(), DBKey.LATEST_EPISODE.getValue(),
+                String.valueOf(latestEpNumber)));
 
         logger.info("Now Downloading Episode {}", latestEpNumber);
         episodeDownloader.apply(latestEpNumber);

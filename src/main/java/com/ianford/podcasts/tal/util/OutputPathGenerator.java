@@ -2,6 +2,7 @@ package com.ianford.podcasts.tal.util;
 
 import java.util.function.Function;
 
+@SuppressWarnings("unused")
 public class OutputPathGenerator implements Function<Integer, String> {
 
     private final String downloadDestinationFolder;

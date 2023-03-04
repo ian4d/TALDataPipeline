@@ -3,6 +3,7 @@ package com.ianford.tal.config;
 import java.util.Map;
 import java.util.function.Function;
 
+@SuppressWarnings("unused")
 public class PropertiesProvider implements Function<String, String> {
 
     private final Map<String, String> propertiesMap;

@@ -13,6 +13,7 @@ import java.util.function.Function;
 /**
  * Loads downloaded HTML as JSoup entities for further parsing
  */
+@SuppressWarnings("unused")
 public class JSoupDocumentLoader implements Function<String, Document> {
 
     private final Logger logger = LogManager.getLogger();

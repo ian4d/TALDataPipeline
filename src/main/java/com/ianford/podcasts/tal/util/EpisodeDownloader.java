@@ -1,12 +1,12 @@
 package com.ianford.podcasts.tal.util;
 
+import com.ianford.podcasts.io.FileSaver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -14,23 +14,24 @@ public class EpisodeDownloader implements Function<Integer, String> {
 
     private static final Logger logger = LogManager.getLogger(EpisodeDownloader.class);
 
-    private final Function<Integer, String> urlGenerator;
-    private final Function<Integer, String> outputPathGenerator;
+    private final URLGenerator urlGenerator;
+    private final OutputPathGenerator outputPathGenerator;
     private final Predicate<String> existingFilePredicate;
-    private final BiConsumer<String, String> outputWriter;
+    private final FileSaver outputWriter;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param urlGenerator
-     * @param outputPathGenerator
-     * @param existingFilePredicate
-     * @param outputWriter
+     * @param urlGenerator          Generates URLs to download episodes from.
+     * @param outputPathGenerator   Generates file paths to store output in.
+     * @param existingFilePredicate Checks whether files exist already.
+     * @param outputWriter          Writes downloaded output.
      */
-    public EpisodeDownloader(Function<Integer, String> urlGenerator,
-                             Function<Integer, String> outputPathGenerator,
+    @SuppressWarnings("unused")
+    public EpisodeDownloader(URLGenerator urlGenerator,
+                             OutputPathGenerator outputPathGenerator,
                              Predicate<String> existingFilePredicate,
-                             BiConsumer<String, String> outputWriter) {
+                             FileSaver outputWriter) {
         this.urlGenerator = urlGenerator;
         this.outputPathGenerator = outputPathGenerator;
         this.existingFilePredicate = existingFilePredicate;
@@ -38,11 +39,11 @@ public class EpisodeDownloader implements Function<Integer, String> {
     }
 
     /**
-     * Downloads an episode at the provided URL
+     * Downloads an episode at the provided URL.
      *
-     * @param episodeURL
-     * @return
-     * @throws IOException
+     * @param episodeURL URL to download an episode from.
+     * @return String
+     * @throws IOException Thrown if episode can't be loaded
      */
     private String getHTMLContent(String episodeURL) throws IOException {
         logger.info("Downloading episode from URL: {}", episodeURL);
@@ -57,10 +58,10 @@ public class EpisodeDownloader implements Function<Integer, String> {
     }
 
     /**
-     * Downloads the episode indicated by episodeNumber and returns a path to the resulting file
+     * Downloads the episode indicated by episodeNumber and returns a path to the resulting file.
      *
      * @param episodeNumber The number of the episode to download
-     * @return
+     * @return String
      */
     @Override
     public String apply(Integer episodeNumber) {

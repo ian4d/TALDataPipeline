@@ -1,7 +1,7 @@
 package com.ianford.tal.steps;
 
 import com.ianford.podcasts.model.BasicEpisodeRecord;
-import com.ianford.podcasts.tal.io.TALEpisodeParser;
+import com.ianford.podcasts.tal.io.RawEpisodeParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -15,26 +15,27 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BackfillDatabaseStep implements PipelineStep {
 
     private static final Logger logger = LogManager.getLogger();
 
     private final DynamoDbTable<BasicEpisodeRecord> table;
-    private final TALEpisodeParser episodeParser;
+    private final RawEpisodeParser episodeParser;
 
     /**
      * Constructor.
      *
-     * @param table
-     * @param episodeParser
+     * @param table         Used to store records we are backfilling.
+     * @param episodeParser Used to convert raw HTML files into episode data.
      */
-    public BackfillDatabaseStep(DynamoDbTable<BasicEpisodeRecord> table, TALEpisodeParser episodeParser) {
+    @SuppressWarnings("unused")
+    public BackfillDatabaseStep(DynamoDbTable<BasicEpisodeRecord> table, RawEpisodeParser episodeParser) {
         this.table = table;
         this.episodeParser = episodeParser;
     }
 
+    @SuppressWarnings("unused")
     @Override
     public void run() throws IOException {
         // Converted all files into data
@@ -44,7 +45,7 @@ public class BackfillDatabaseStep implements PipelineStep {
         List<BasicEpisodeRecord> writtenContents = allFilePaths.stream()
                 .peek(path -> logger.info("Reading file at {}", path.toString()))
                 .filter(path -> !episodeIsAlreadyParsed(path))
-                .map(path -> episodeParser.apply(path))
+                .map(episodeParser)
                 .flatMap(List::stream)
                 .peek(record -> logger.debug(record.toString()))
                 .map(this::writeRecordToDB)// write each record to DB
@@ -78,13 +79,5 @@ public class BackfillDatabaseStep implements PipelineStep {
         logger.debug("Writing record: {}", record.toString());
         table.putItem(record);
         return record;
-    }
-
-    String readFile(Path path) {
-        try (Stream<String> lines = Files.readAllLines(path).stream()) {
-            return lines.collect(Collectors.joining(""));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

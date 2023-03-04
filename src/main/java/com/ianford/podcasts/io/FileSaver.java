@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 /**
  * Writes output files
  */
+@SuppressWarnings("unused")
 public class FileSaver implements BiConsumer<String, String> {
 
     private final Logger logger = LogManager.getLogger(FileSaver.class);

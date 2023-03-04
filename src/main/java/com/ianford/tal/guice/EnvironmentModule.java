@@ -9,12 +9,13 @@ import org.apache.logging.log4j.Logger;
 import javax.inject.Named;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class EnvironmentModule extends PrivateModule {
 
-    private static final Logger logger = LogManager.getLogger();
     public static final String DYNAMO_ENDPOINT = "DYNAMO_ENDPOINT";
     public static final String AWS_REGION = "AWS_REGION";
     public static final String TABLE_NAME = "TABLE_NAME";
+    private static final Logger logger = LogManager.getLogger();
 
     @Override
     protected void configure() {

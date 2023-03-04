@@ -12,13 +12,19 @@ public class BasicEpisodeRecord implements EpisodeRecordInterface {
     String sort;
     String value;
 
+    @SuppressWarnings("unused")
     public BasicEpisodeRecord() {
     }
 
+    @SuppressWarnings("unused")
     public BasicEpisodeRecord(String showName, String sort, String value) {
         this.showName = showName;
         this.sort = sort;
         this.value = value;
+    }
+
+    public String getShowName() {
+        return showName;
     }
 
     @DynamoDbPartitionKey
@@ -26,28 +32,22 @@ public class BasicEpisodeRecord implements EpisodeRecordInterface {
         this.showName = showName;
     }
 
+    public String getSort() {
+        return sort;
+    }
+
     @DynamoDbSortKey
     public void setSort(String sort) {
         this.sort = sort;
     }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-
-    public String getShowName() {
-        return showName;
-    }
-
-
-    public String getSort() {
-        return sort;
-    }
-
     @Override
     public String getValue() {
         return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.ianford.podcasts.tal.io;
 
 import com.ianford.podcasts.model.BasicEpisodeRecord;
-import com.ianford.podcasts.model.EpisodeRecordInterface;
+import com.ianford.podcasts.model.DBKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.nodes.Document;
@@ -16,7 +16,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TALEpisodeParser implements Function<Path, List<BasicEpisodeRecord>> {
+@SuppressWarnings("unused")
+public class RawEpisodeParser implements Function<Path, List<BasicEpisodeRecord>> {
 
     private static final Logger logger = LogManager.getLogger();
 
@@ -31,10 +32,11 @@ public class TALEpisodeParser implements Function<Path, List<BasicEpisodeRecord>
      *
      * @param docLoader Used to load files as JSoup documents
      */
-    public TALEpisodeParser(Function<String, Document> docLoader) {
+    public RawEpisodeParser(Function<String, Document> docLoader) {
         this.docLoader = docLoader;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<BasicEpisodeRecord> apply(Path episodeFilePath) {
         final Document doc = docLoader.apply(episodeFilePath.toString());
@@ -72,8 +74,8 @@ public class TALEpisodeParser implements Function<Path, List<BasicEpisodeRecord>
 
 
         BasicEpisodeRecord episodeTitleRecord = new BasicEpisodeRecord();
-        episodeTitleRecord.setShowName("TAL");
-        episodeTitleRecord.setSort(String.format("EP%d#NAME", episodeNumber));
+        episodeTitleRecord.setShowName(DBKey.PARTITION.getValue());
+        episodeTitleRecord.setSort(DBKey.EPISODE_NAME.format(episodeNumber));
         episodeTitleRecord.setValue(episodeName);
         episodeRecordList.add(episodeTitleRecord);
 
@@ -84,8 +86,8 @@ public class TALEpisodeParser implements Function<Path, List<BasicEpisodeRecord>
 
 
             BasicEpisodeRecord actNameRecord = new BasicEpisodeRecord();
-            actNameRecord.setShowName("TAL");
-            actNameRecord.setSort(String.format("EP%d#ACT%d#NAME", episodeNumber, actNumber, actName));
+            actNameRecord.setShowName(DBKey.PARTITION.getValue());
+            actNameRecord.setSort(DBKey.ACT_NAME.format(episodeNumber, actNumber));
             actNameRecord.setValue(actName);
             episodeRecordList.add(actNameRecord);
 
@@ -97,14 +99,16 @@ public class TALEpisodeParser implements Function<Path, List<BasicEpisodeRecord>
                     final String paragraphText = paragraph.text();
 
                     BasicEpisodeRecord speakerTextRecord = new BasicEpisodeRecord();
-                    speakerTextRecord.setShowName("TAL");
-                    speakerTextRecord.setSort(String.format("EP%d#ACT%d#TIME%s#TEXT", episodeNumber, actNumber, startTime));
+                    speakerTextRecord.setShowName(DBKey.PARTITION.getValue());
+                    speakerTextRecord.setSort(
+                            DBKey.SPEAKER_TEXT.format(episodeNumber, actNumber, startTime));
                     speakerTextRecord.setValue(paragraphText);
                     episodeRecordList.add(speakerTextRecord);
 
                     BasicEpisodeRecord speakerNameRecord = new BasicEpisodeRecord();
-                    speakerNameRecord.setShowName("TAL");
-                    speakerNameRecord.setSort(String.format("EP%d#ACT%d#TIME%s#SPEAKER", episodeNumber, actNumber, startTime));
+                    speakerNameRecord.setShowName(DBKey.PARTITION.getValue());
+                    speakerNameRecord.setSort(
+                            DBKey.SPEAKER_NAME.format(episodeNumber, actNumber, startTime));
                     speakerNameRecord.setValue(speakerName);
                     episodeRecordList.add(speakerNameRecord);
                 }

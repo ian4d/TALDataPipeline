@@ -5,8 +5,6 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.ianford.podcasts.model.BasicEpisodeRecord;
-import com.ianford.podcasts.tal.io.TALEpisodeParser;
-import com.ianford.tal.steps.BackfillDatabaseStep;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -23,6 +21,7 @@ import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
 import java.net.URI;
 
+@SuppressWarnings("unused")
 public class DynamoDBModule extends PrivateModule {
 
     private static final Logger logger = LogManager.getLogger();
@@ -32,6 +31,13 @@ public class DynamoDBModule extends PrivateModule {
         logger.info("Configuring DynamoDBModule");
     }
 
+    /**
+     * Provides a basic DynamoDbClient.
+     *
+     * @param dynamoEndpoint Endpoint to connect to.
+     * @param region         Region to make requests in.
+     * @return DynamoDbClient
+     */
     @Provides
     DynamoDbClient provideClient(
             @Named(EnvironmentModule.DYNAMO_ENDPOINT) String dynamoEndpoint,
@@ -47,6 +53,12 @@ public class DynamoDBModule extends PrivateModule {
 
     }
 
+    /**
+     * Provides an enhanced client.
+     *
+     * @param baseClient Client to wrap with enhanced client.
+     * @return DynamoDbEnhancedClient
+     */
     @Provides
     DynamoDbEnhancedClient provideEnhancedClient(DynamoDbClient baseClient) {
         return DynamoDbEnhancedClient.builder()
@@ -54,6 +66,13 @@ public class DynamoDBModule extends PrivateModule {
                 .build();
     }
 
+    /**
+     * Provides an object used to interact with our table.
+     *
+     * @param dbClient  Enhanced client used to build our table instance.
+     * @param tableName Name of our table.
+     * @return DynamoDbTable
+     */
     @Provides
     @Exposed
     DynamoDbTable<BasicEpisodeRecord> provideRecordTable(DynamoDbEnhancedClient dbClient,
@@ -77,13 +96,6 @@ public class DynamoDBModule extends PrivateModule {
         }
 
         return episodeTable;
-    }
-
-    @Provides
-    @Exposed
-    BackfillDatabaseStep provideBackfillStep(DynamoDbTable<BasicEpisodeRecord> table,
-                                             TALEpisodeParser episodeParser) {
-        return new BackfillDatabaseStep(table, episodeParser);
     }
 
 }

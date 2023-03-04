@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 /**
- * Used to run all of the provided pipeline steps
+ * Used to run all the provided pipeline steps.
  */
 public class Pipeline {
 

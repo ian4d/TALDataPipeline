@@ -6,7 +6,6 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-import com.ianford.podcasts.io.FileLoader;
 import com.ianford.tal.config.PropertiesProvider;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -22,6 +21,7 @@ import java.util.Map;
 /**
  * Used to provide properties read in from configuration files
  */
+@SuppressWarnings("unused")
 public class PropertiesModule extends PrivateModule {
 
     // Logger
@@ -78,17 +78,5 @@ public class PropertiesModule extends PrivateModule {
     @Singleton
     PropertiesProvider providePropertiesProvider() {
         return new PropertiesProvider(propertiesMap);
-    }
-
-    /**
-     * Provides an object that loads a file as a String
-     *
-     * @return
-     */
-    @Exposed
-    @Provides
-    @Singleton
-    FileLoader provideFileLoader() {
-        return new FileLoader();
     }
 }

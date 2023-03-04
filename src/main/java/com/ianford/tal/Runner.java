@@ -53,9 +53,9 @@ class Runner {
 
 
     /**
-     * Prepares the injector with the properties in our properties file
+     * Prepares the injector with the properties in our properties file.
      *
-     * @param configPath
+     * @param configPath Path where a configuration file can be found.
      */
     private static Injector configureInjector(String configPath) {
         logger.info("Configuring injector");

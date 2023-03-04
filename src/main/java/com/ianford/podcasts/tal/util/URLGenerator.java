@@ -3,16 +3,17 @@ package com.ianford.podcasts.tal.util;
 import java.util.function.Function;
 
 /**
- * Generates URLs
+ * Generates URLs.
  */
+@SuppressWarnings("unused")
 public class URLGenerator implements Function<Integer, String> {
 
     private final String urlFormat;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param urlFormat
+     * @param urlFormat String format to use when generating URLs
      */
     public URLGenerator(String urlFormat) {
         this.urlFormat = urlFormat;

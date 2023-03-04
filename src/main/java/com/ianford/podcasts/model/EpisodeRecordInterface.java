@@ -5,12 +5,13 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 /**
  * Represents a single episode of some particular show
  */
+@SuppressWarnings("unused")
 @DynamoDbBean
 public interface EpisodeRecordInterface {
 
-    public String getShowName();
+    String getShowName();
 
-    public String getSort();
+    String getSort();
 
-    public String getValue();
+    String getValue();
 }
