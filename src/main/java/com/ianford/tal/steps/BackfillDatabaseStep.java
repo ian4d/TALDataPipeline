@@ -53,6 +53,9 @@ public class BackfillDatabaseStep implements PipelineStep {
 
         logger.debug("writtenContents: {}", writtenContents.size());
 
+        // Clean up raw data when done
+        allFilePaths.stream().forEach(path -> path.toFile().deleteOnExit());
+
         // Read all locally stored files
         // Convert all fo them into records in our db
     }
