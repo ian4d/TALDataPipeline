@@ -1,7 +1,10 @@
 package com.ianford.podcasts.tal.io;
 
-import com.ianford.podcasts.model.BasicEpisodeRecord;
-import com.ianford.podcasts.model.DBKey;
+import com.google.gson.Gson;
+import com.ianford.podcasts.model.BasicPodcastRecord;
+import com.ianford.podcasts.model.DBPartitionKey;
+import com.ianford.podcasts.model.DBSortKey;
+import com.ianford.podcasts.model.jekyll.Statement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.nodes.Document;
@@ -17,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
-public class RawEpisodeParser implements Function<Path, List<BasicEpisodeRecord>> {
+public class RawEpisodeParser implements Function<Path, List<BasicPodcastRecord>> {
 
     private static final Logger logger = LogManager.getLogger();
 
@@ -27,18 +30,24 @@ public class RawEpisodeParser implements Function<Path, List<BasicEpisodeRecord>
 
     private final Function<String, Document> docLoader;
 
+    private final Gson gson;
+
+
+
     /**
      * Constructor
      *
      * @param docLoader Used to load files as JSoup documents
+     * @param gson
      */
-    public RawEpisodeParser(Function<String, Document> docLoader) {
+    public RawEpisodeParser(Function<String, Document> docLoader, Gson gson) {
         this.docLoader = docLoader;
+        this.gson = gson;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<BasicEpisodeRecord> apply(Path episodeFilePath) {
+    public List<BasicPodcastRecord> apply(Path episodeFilePath) {
         final Document doc = docLoader.apply(episodeFilePath.toString());
         if (null == doc) {
             logger.info("Doc was empty at {}", episodeFilePath.toString());
@@ -70,47 +79,53 @@ public class RawEpisodeParser implements Function<Path, List<BasicEpisodeRecord>
 
         // Iterate over acts and parse out relevant data. Generate records and store in a List for return.
         int actNumber = 1;
-        final List<BasicEpisodeRecord> episodeRecordList = new ArrayList<>();
+        int statementCountForEpisode = 1;
+        final List<BasicPodcastRecord> episodeRecordList = new ArrayList<>();
 
-
-        BasicEpisodeRecord episodeTitleRecord = new BasicEpisodeRecord();
-        episodeTitleRecord.setShowName(DBKey.PARTITION.getValue());
-        episodeTitleRecord.setSort(DBKey.EPISODE_NAME.format(episodeNumber));
+        // Record for title of episode
+        BasicPodcastRecord episodeTitleRecord = new BasicPodcastRecord();
+        episodeTitleRecord.setPrimaryKey(DBPartitionKey.EPISODE_NUMBER.format(episodeNumber));
+        episodeTitleRecord.setSort(DBSortKey.EPISODE_NAME.getValue());
         episodeTitleRecord.setValue(episodeName);
         episodeRecordList.add(episodeTitleRecord);
 
         // TODO: Add air-date record
-
         for (final Element act : actList) {
+
+            // Record for name of act
             final String actName = extractActName(act);
-
-
-            BasicEpisodeRecord actNameRecord = new BasicEpisodeRecord();
-            actNameRecord.setShowName(DBKey.PARTITION.getValue());
-            actNameRecord.setSort(DBKey.ACT_NAME.format(episodeNumber, actNumber));
+            BasicPodcastRecord actNameRecord = new BasicPodcastRecord();
+            actNameRecord.setPrimaryKey(DBPartitionKey.EPISODE_NUMBER.format(episodeNumber));
+            actNameRecord.setSort(DBSortKey.ACT_NAME.format(actNumber));
             actNameRecord.setValue(actName);
             episodeRecordList.add(actNameRecord);
 
-            for (final Element statement : extractActStatements(act)) {
-                final String speakerRole = extractSpeakerRole(statement);
-                final String speakerName = extractSpeakerName(statement);
-                for (final Element paragraph : extractSpeakerStatements(statement)) {
+            // Build records for statements made in act
+            int statementCountForAct = 1;
+            for (final Element actStatement : extractActStatements(act)) {
+                final String speakerRole = extractSpeakerRole(actStatement);
+                final String speakerName = extractSpeakerName(actStatement);
+                for (final Element paragraph : extractSpeakerStatements(actStatement)) {
                     final String startTime = extractStartTime(paragraph);
                     final String paragraphText = paragraph.text();
 
-                    BasicEpisodeRecord speakerTextRecord = new BasicEpisodeRecord();
-                    speakerTextRecord.setShowName(DBKey.PARTITION.getValue());
-                    speakerTextRecord.setSort(
-                            DBKey.SPEAKER_TEXT.format(episodeNumber, actNumber, startTime));
-                    speakerTextRecord.setValue(paragraphText);
-                    episodeRecordList.add(speakerTextRecord);
+                    String partitionKey = DBPartitionKey.EPISODE_NUMBER.format(episodeNumber);
+                    Statement statement = new Statement(speakerName, paragraphText);
+                    String serializedStatement = gson.toJson(statement);
 
-                    BasicEpisodeRecord speakerNameRecord = new BasicEpisodeRecord();
-                    speakerNameRecord.setShowName(DBKey.PARTITION.getValue());
-                    speakerNameRecord.setSort(
-                            DBKey.SPEAKER_NAME.format(episodeNumber, actNumber, startTime));
-                    speakerNameRecord.setValue(speakerName);
-                    episodeRecordList.add(speakerNameRecord);
+                    BasicPodcastRecord actStatementRecord = new BasicPodcastRecord();
+                    actStatementRecord.setPrimaryKey(partitionKey);
+                    actStatementRecord.setSort(DBSortKey.ACT_STATEMENT.format(actNumber, statementCountForAct, startTime));
+                    actStatementRecord.setValue(serializedStatement);
+                    episodeRecordList.add(actStatementRecord);
+                    statementCountForAct++;
+
+                    BasicPodcastRecord episodeStatementRecord = new BasicPodcastRecord();
+                    episodeStatementRecord.setPrimaryKey(partitionKey);
+                    episodeStatementRecord.setSort(DBSortKey.EPISODE_STATEMENT.format(statementCountForEpisode, startTime));
+                    episodeStatementRecord.setValue(serializedStatement);
+                    episodeRecordList.add(episodeStatementRecord);
+                    statementCountForEpisode++;
                 }
             }
             actNumber++;

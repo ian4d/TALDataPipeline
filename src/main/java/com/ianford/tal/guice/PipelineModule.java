@@ -1,14 +1,17 @@
 package com.ianford.tal.guice;
 
+import com.google.gson.Gson;
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
-import com.ianford.podcasts.model.BasicEpisodeRecord;
+import com.ianford.podcasts.model.BasicPodcastRecord;
 import com.ianford.podcasts.tal.io.RawEpisodeParser;
 import com.ianford.podcasts.tal.util.EpisodeDownloader;
 import com.ianford.tal.Pipeline;
-import com.ianford.tal.steps.BackfillDatabaseStep;
+import com.ianford.tal.steps.BackfillContributorDataStep;
+import com.ianford.tal.steps.BackfillEpisodeDataStep;
 import com.ianford.tal.steps.DownloadEpisodeStep;
+import com.ianford.tal.steps.GithubCommitStep;
 import com.ianford.tal.steps.PipelineStep;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,10 +53,10 @@ public class PipelineModule extends PrivateModule {
      * @return DownloadEpisodeStep
      */
     @Provides
-    @Exposed
     DownloadEpisodeStep provideDownloadEpisodeStep(EpisodeDownloader episodeDownloader,
-                                                   DynamoDbTable<BasicEpisodeRecord> table) {
-        return new DownloadEpisodeStep(episodeDownloader, table);
+            DynamoDbTable<BasicPodcastRecord> table) {
+        return new DownloadEpisodeStep(episodeDownloader,
+                                       table);
     }
 
     /**
@@ -61,13 +64,33 @@ public class PipelineModule extends PrivateModule {
      *
      * @param table         Used to write to our DB.
      * @param episodeParser Used to parse HTML episodes.
+     * @param gson          Used to handle serialization of jekyll data.
      * @return BackfillDatabaseStep
      */
     @Provides
-    @Exposed
-    BackfillDatabaseStep provideBackfillStep(DynamoDbTable<BasicEpisodeRecord> table,
-                                             RawEpisodeParser episodeParser) {
-        return new BackfillDatabaseStep(table, episodeParser);
+    BackfillEpisodeDataStep provideBackfillEpisodeDataStep(DynamoDbTable<BasicPodcastRecord> table,
+            RawEpisodeParser episodeParser, Gson gson) {
+        return new BackfillEpisodeDataStep(table,
+                                           episodeParser,
+                                           gson);
+    }
+
+    /**
+     * Provides a step that updates our DB based on new contributor data.
+     *
+     * @param table Used to write to our DB.
+     * @return BackfillContributorDataStep
+     */
+    @Provides
+    BackfillContributorDataStep provideBackfillContributorDataStep(DynamoDbTable<BasicPodcastRecord> table,
+            Gson gson) {
+        return new BackfillContributorDataStep(table,
+                                               gson);
+    }
+
+    @Provides
+    GithubCommitStep provideGithubCommitStep() {
+        return new GithubCommitStep();
     }
 
     /**
@@ -75,14 +98,17 @@ public class PipelineModule extends PrivateModule {
      */
     @Provides
     List<PipelineStep> providePipelineSteps(DownloadEpisodeStep downloadEpisodeStep,
-                                            BackfillDatabaseStep backfillDatabaseStep
-    ) {
+            BackfillEpisodeDataStep backfillEpisodeDataStep,
+            BackfillContributorDataStep backfillContributorDataStep,
+            GithubCommitStep githubCommitStep
+                                           ) {
         List<PipelineStep> steps = new ArrayList<>();
 
         // Download any new/missing episodes
-        steps.add(downloadEpisodeStep);
-        steps.add(backfillDatabaseStep);
-
+//        steps.add(downloadEpisodeStep);
+//        steps.add(backfillEpisodeDataStep);
+//        steps.add(backfillContributorDataStep);
+        steps.add(githubCommitStep);
 
         return steps;
     }

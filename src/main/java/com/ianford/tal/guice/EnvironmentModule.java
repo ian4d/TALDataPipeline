@@ -1,5 +1,7 @@
 package com.ianford.tal.guice;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
@@ -20,6 +22,12 @@ public class EnvironmentModule extends PrivateModule {
     @Override
     protected void configure() {
         logger.info("Configuring EnvironmentModule");
+    }
+
+    @Provides
+    @Exposed
+    Gson provideGson() {
+        return new GsonBuilder().create();
     }
 
     @Provides

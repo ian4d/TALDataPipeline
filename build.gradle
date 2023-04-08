@@ -11,6 +11,9 @@ repositories {
     maven {
         url 'https://s3-us-west-2.amazonaws.com/dynamodb-local/release'
     }
+    maven {
+        url 'https://repo.eclipse.org/content/groups/releases/'
+    }
     mavenCentral()
 }
 
@@ -20,10 +23,10 @@ run {
 }
 
 dependencies {
-    implementation 'software.amazon.awssdk:bom:2.20.8'
-    implementation 'software.amazon.awssdk:dynamodb:2.20.8'
+    implementation 'software.amazon.awssdk:bom:2.20.26'
+    implementation 'software.amazon.awssdk:dynamodb:2.20.26'
 
-    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.30'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.32'
     implementation group: "com.google.inject", name: "guice", version: "5.1.0"
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.5.0'
 
@@ -33,11 +36,16 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.0'
 
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.http.server:6.5.0.202303070854-r'
+
+
     // Used to parse DOM
     implementation 'org.jsoup:jsoup:1.15.4'
 
     // Used to build model locally
     implementation 'com.amazonaws:DynamoDBLocal:[1.12,2.0)'
+    implementation 'com.google.code.gson:gson:2.10.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testImplementation 'org.apache.commons:commons-lang3:3.12.0'

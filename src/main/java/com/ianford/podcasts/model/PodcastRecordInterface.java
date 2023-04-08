@@ -7,9 +7,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
  */
 @SuppressWarnings("unused")
 @DynamoDbBean
-public interface EpisodeRecordInterface {
+public interface PodcastRecordInterface {
 
-    String getShowName();
+    String getPrimaryKey();
 
     String getSort();
 

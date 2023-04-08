@@ -6,30 +6,30 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @DynamoDbBean
-public class BasicEpisodeRecord implements EpisodeRecordInterface {
+public class BasicPodcastRecord implements PodcastRecordInterface {
 
-    String showName;
+    String primaryKey;
     String sort;
     String value;
 
     @SuppressWarnings("unused")
-    public BasicEpisodeRecord() {
+    public BasicPodcastRecord() {
     }
 
     @SuppressWarnings("unused")
-    public BasicEpisodeRecord(String showName, String sort, String value) {
-        this.showName = showName;
+    public BasicPodcastRecord(String primaryKey, String sort, String value) {
+        this.primaryKey = primaryKey;
         this.sort = sort;
         this.value = value;
     }
 
-    public String getShowName() {
-        return showName;
+    public String getPrimaryKey() {
+        return primaryKey;
     }
 
     @DynamoDbPartitionKey
-    public void setShowName(String showName) {
-        this.showName = showName;
+    public void setPrimaryKey(String primaryKey) {
+        this.primaryKey = primaryKey;
     }
 
     public String getSort() {
@@ -53,7 +53,7 @@ public class BasicEpisodeRecord implements EpisodeRecordInterface {
     @Override
     public String toString() {
         return "BasicEpisodeRecord{" +
-                "showName='" + showName + '\'' +
+                "showName='" + primaryKey + '\'' +
                 ", sort='" + sort + '\'' +
                 ", value='" + value + '\'' +
                 '}';

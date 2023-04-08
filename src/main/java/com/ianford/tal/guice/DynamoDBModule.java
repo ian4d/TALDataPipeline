@@ -4,7 +4,7 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
-import com.ianford.podcasts.model.BasicEpisodeRecord;
+import com.ianford.podcasts.model.BasicPodcastRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -75,12 +75,15 @@ public class DynamoDBModule extends PrivateModule {
      */
     @Provides
     @Exposed
-    DynamoDbTable<BasicEpisodeRecord> provideRecordTable(DynamoDbEnhancedClient dbClient,
+    DynamoDbTable<BasicPodcastRecord> provideRecordTable(DynamoDbEnhancedClient dbClient,
                                                          @Named(EnvironmentModule.TABLE_NAME) String tableName) {
-        DynamoDbTable<BasicEpisodeRecord> episodeTable =
-                dbClient.table(tableName, TableSchema.fromBean(BasicEpisodeRecord.class));
+        DynamoDbTable<BasicPodcastRecord> episodeTable =
+                dbClient.table(tableName, TableSchema.fromBean(BasicPodcastRecord.class));
         try {
+            logger.info("Attempting table creation");
+
             episodeTable.createTable();
+
 
             try (DynamoDbWaiter waiter = DynamoDbWaiter.create()) {
                 ResponseOrException<DescribeTableResponse> response = waiter
@@ -91,7 +94,7 @@ public class DynamoDBModule extends PrivateModule {
                 // The actual error can be inspected in response.exception()
                 System.out.println(tableDescription.table().tableName() + " was created.");
             }
-        } catch (ResourceInUseException ex) {
+        } catch (Exception ex) {
             logger.info("Table {} already exists", tableName);
         }
 

@@ -10,13 +10,15 @@ services:
       - "./docker/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
   tal:
-    image: "tal"
+    build:
+      context: ./
     command: "./gradlew run"
     container_name: tal-runner
     ports:
       - "5050:5005"
     depends_on:
       - dynamodb-local
+    working_dir: /app
     environment:
       DYNAMO_ENDPOINT: "http://dynamodb-local:8000"
       AWS_REGION: "us-east-1"

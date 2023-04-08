@@ -1,7 +1,8 @@
 package com.ianford.tal.steps;
 
-import com.ianford.podcasts.model.BasicEpisodeRecord;
-import com.ianford.podcasts.model.DBKey;
+import com.ianford.podcasts.model.BasicPodcastRecord;
+import com.ianford.podcasts.model.DBPartitionKey;
+import com.ianford.podcasts.model.DBSortKey;
 import com.ianford.podcasts.tal.util.EpisodeDownloader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +19,7 @@ public class DownloadEpisodeStep implements PipelineStep {
     private static final Logger logger = LogManager.getLogger();
     private final EpisodeDownloader episodeDownloader;
 
-    private final DynamoDbTable<BasicEpisodeRecord> table;
+    private final DynamoDbTable<BasicPodcastRecord> table;
 
     /**
      * Constructor.
@@ -27,7 +28,7 @@ public class DownloadEpisodeStep implements PipelineStep {
      * @param table             Used to identify the last episode we parsed.
      */
     @SuppressWarnings("unused")
-    public DownloadEpisodeStep(EpisodeDownloader episodeDownloader, DynamoDbTable<BasicEpisodeRecord> table) {
+    public DownloadEpisodeStep(EpisodeDownloader episodeDownloader, DynamoDbTable<BasicPodcastRecord> table) {
         this.episodeDownloader = episodeDownloader;
         this.table = table;
     }
@@ -38,21 +39,25 @@ public class DownloadEpisodeStep implements PipelineStep {
     public void run() {
         logger.info("Downloading missing episodes");
 
-        BasicEpisodeRecord record = table.getItem(Key.builder()
-                .partitionValue(DBKey.PARTITION.getValue())
-                .sortValue(DBKey.LATEST_EPISODE.getValue())
-                .build());
+        BasicPodcastRecord record = table.getItem(Key.builder()
+                                                          .partitionValue(DBPartitionKey.PODCAST_NAME.getValue())
+                                                          .sortValue(DBSortKey.LATEST_EPISODE.getValue())
+                                                          .build());
 
         int latestEpNumber = Optional.ofNullable(record)
-                .map(BasicEpisodeRecord::getValue)
+                .map(BasicPodcastRecord::getValue)
                 .map(Integer::parseInt)
                 .map(latest -> latest + 1)
                 .orElseGet(() -> 1);
+        logger.info("Latest episode number: ",
+                    latestEpNumber);
 
-        table.updateItem(new BasicEpisodeRecord(DBKey.PARTITION.getValue(), DBKey.LATEST_EPISODE.getValue(),
-                String.valueOf(latestEpNumber)));
+        table.updateItem(new BasicPodcastRecord(DBPartitionKey.PODCAST_NAME.getValue(),
+                                                DBSortKey.LATEST_EPISODE.getValue(),
+                                                String.valueOf(latestEpNumber)));
 
-        logger.info("Now Downloading Episode {}", latestEpNumber);
+        logger.info("Now Downloading Episode {}",
+                    latestEpNumber);
         episodeDownloader.apply(latestEpNumber);
         logger.info("All missing episodes downloaded");
     }

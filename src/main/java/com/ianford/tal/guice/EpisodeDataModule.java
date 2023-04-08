@@ -1,5 +1,6 @@
 package com.ianford.tal.guice;
 
+import com.google.gson.Gson;
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
@@ -44,11 +45,14 @@ public class EpisodeDataModule extends PrivateModule {
             @Named("download.fileNameFormat") String downloadFileNameFormat) {
         URLGenerator urlGenerator = new URLGenerator(urlFormat);
         OutputPathGenerator outputPathGenerator = new OutputPathGenerator(downloadDestinationFolder,
-                downloadFileNameFormat);
+                                                                          downloadFileNameFormat);
         Predicate<String> existingFilePredicate = path -> new File(path).exists();
         FileSaver outputWriter = new FileSaver();
 
-        return new EpisodeDownloader(urlGenerator, outputPathGenerator, existingFilePredicate, outputWriter);
+        return new EpisodeDownloader(urlGenerator,
+                                     outputPathGenerator,
+                                     existingFilePredicate,
+                                     outputWriter);
     }
 
     /**
@@ -59,8 +63,9 @@ public class EpisodeDataModule extends PrivateModule {
     @Provides
     @Exposed
     @Singleton
-    RawEpisodeParser provideRawEpisodeParser() {
-        return new RawEpisodeParser(new JSoupDocumentLoader());
+    RawEpisodeParser provideRawEpisodeParser(Gson gson) {
+        return new RawEpisodeParser(new JSoupDocumentLoader(),
+                                    gson);
     }
 
 }
