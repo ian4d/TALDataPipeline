@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Episode {
 
@@ -14,7 +15,7 @@ public class Episode {
 
     private Map<Integer, Act> actMap;
 
-    private List<Statement> statementList;
+    private final List<Statement> statementList;
 
     public Episode(int episodeNumber) {
         this.episodeNumber = episodeNumber;
@@ -53,5 +54,29 @@ public class Episode {
 
     public List<Statement> getStatementList() {
         return statementList;
+    }
+
+    public Summary summarize() {
+        return new Summary(String.valueOf(this.episodeNumber),
+                this.episodeTitle,
+                contributorMap.values()
+                        .stream()
+                        .map(Contributor::getName)
+                        .collect(Collectors.toList()));
+
+    }
+
+    private static class Summary {
+
+        private final String number;
+        private final String title;
+        private final List<String> contributors;
+
+        private Summary(String number, String title, List<String> contributors) {
+            this.number = number;
+            this.title = title;
+            this.contributors = contributors;
+        }
+
     }
 }

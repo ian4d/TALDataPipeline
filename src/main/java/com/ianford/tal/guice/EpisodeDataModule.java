@@ -5,13 +5,11 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.ianford.podcasts.io.FileSaver;
 import com.ianford.podcasts.io.JSoupDocumentLoader;
-import com.ianford.podcasts.tal.io.RawEpisodeParser;
-import com.ianford.podcasts.tal.util.EpisodeDownloader;
-import com.ianford.podcasts.tal.util.OutputPathGenerator;
-import com.ianford.podcasts.tal.util.URLGenerator;
+import com.ianford.tal.io.RawEpisodeParser;
+import com.ianford.tal.util.EpisodeDownloader;
+import com.ianford.tal.util.OutputPathGenerator;
+import com.ianford.tal.util.URLGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,27 +30,19 @@ public class EpisodeDataModule extends PrivateModule {
     /**
      * Provides an object used to download raw HTML for episodes of the podcast.
      *
-     * @param urlFormat                 Format to use when generating URLs.
-     * @param downloadDestinationFolder Local path to store downloaded episodes in.
-     * @param downloadFileNameFormat    String format to use when generating filenames.
      * @return EpisodeDownloader
      */
     @Provides
     @Exposed
-    EpisodeDownloader provideEpisodeDownloader(
-            @Named("download.urlFormat") String urlFormat,
-            @Named("download.destination") String downloadDestinationFolder,
-            @Named("download.fileNameFormat") String downloadFileNameFormat) {
-        URLGenerator urlGenerator = new URLGenerator(urlFormat);
-        OutputPathGenerator outputPathGenerator = new OutputPathGenerator(downloadDestinationFolder,
-                                                                          downloadFileNameFormat);
+    EpisodeDownloader provideEpisodeDownloader() {
+        URLGenerator urlGenerator = new URLGenerator(System.getenv("TAL_URL_FORMAT"));
+        OutputPathGenerator outputPathGenerator = new OutputPathGenerator(System.getenv("TAL_LOCAL_DOWNLOAD_DIR"),
+                System.getenv("TAL_LOCAL_FILENAME_FORMAT"));
         Predicate<String> existingFilePredicate = path -> new File(path).exists();
-        FileSaver outputWriter = new FileSaver();
 
         return new EpisodeDownloader(urlGenerator,
-                                     outputPathGenerator,
-                                     existingFilePredicate,
-                                     outputWriter);
+                outputPathGenerator,
+                existingFilePredicate);
     }
 
     /**
@@ -65,7 +55,7 @@ public class EpisodeDataModule extends PrivateModule {
     @Singleton
     RawEpisodeParser provideRawEpisodeParser(Gson gson) {
         return new RawEpisodeParser(new JSoupDocumentLoader(),
-                                    gson);
+                gson);
     }
 
 }

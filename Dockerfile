@@ -7,7 +7,8 @@ COPY settings.gradle .
 COPY gradle gradle
 COPY gradlew gradlew
 COPY src ./src
-RUN mkdir -p data/downloads/raw
-RUN mkdir -p data/blog/episodes
-RUN mkdir -p data/blog/contributors
+RUN mkdir -p _data/downloads/raw
+RUN mkdir -p _data/blog/episodes
+RUN mkdir -p _data/blog/contributors
+RUN mkdir -p _posts
 CMD ./gradlew run

@@ -38,7 +38,7 @@ public class BackfillContributorDataStep implements PipelineStep {
     }
 
     @Override
-    public void run() throws IOException {
+    public void run() {
         logger.info("Running BuildContributorDataStep");
         // Grab all entries from that episode
         // Build local contributor model for all of those

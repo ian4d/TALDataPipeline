@@ -5,8 +5,9 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.ianford.podcasts.model.BasicPodcastRecord;
-import com.ianford.podcasts.tal.io.RawEpisodeParser;
-import com.ianford.podcasts.tal.util.EpisodeDownloader;
+import com.ianford.podcasts.model.GitConfiguration;
+import com.ianford.tal.io.RawEpisodeParser;
+import com.ianford.tal.util.EpisodeDownloader;
 import com.ianford.tal.Pipeline;
 import com.ianford.tal.steps.BackfillContributorDataStep;
 import com.ianford.tal.steps.BackfillEpisodeDataStep;
@@ -56,7 +57,7 @@ public class PipelineModule extends PrivateModule {
     DownloadEpisodeStep provideDownloadEpisodeStep(EpisodeDownloader episodeDownloader,
             DynamoDbTable<BasicPodcastRecord> table) {
         return new DownloadEpisodeStep(episodeDownloader,
-                                       table);
+                table);
     }
 
     /**
@@ -71,8 +72,8 @@ public class PipelineModule extends PrivateModule {
     BackfillEpisodeDataStep provideBackfillEpisodeDataStep(DynamoDbTable<BasicPodcastRecord> table,
             RawEpisodeParser episodeParser, Gson gson) {
         return new BackfillEpisodeDataStep(table,
-                                           episodeParser,
-                                           gson);
+                episodeParser,
+                gson);
     }
 
     /**
@@ -85,12 +86,19 @@ public class PipelineModule extends PrivateModule {
     BackfillContributorDataStep provideBackfillContributorDataStep(DynamoDbTable<BasicPodcastRecord> table,
             Gson gson) {
         return new BackfillContributorDataStep(table,
-                                               gson);
+                gson);
     }
 
+    /**
+     * Provides a step that commits changes to our jekyll blog.
+     *
+     * @param gitConfiguration Object used when interacting with Git.
+     * @return GithubCommitStep
+     */
     @Provides
-    GithubCommitStep provideGithubCommitStep() {
-        return new GithubCommitStep();
+    GithubCommitStep provideGithubCommitStep(GitConfiguration gitConfiguration) {
+        return new GithubCommitStep(gitConfiguration,
+                fileSaver);
     }
 
     /**
@@ -105,8 +113,8 @@ public class PipelineModule extends PrivateModule {
         List<PipelineStep> steps = new ArrayList<>();
 
         // Download any new/missing episodes
-//        steps.add(downloadEpisodeStep);
-//        steps.add(backfillEpisodeDataStep);
+        steps.add(downloadEpisodeStep);
+        steps.add(backfillEpisodeDataStep);
 //        steps.add(backfillContributorDataStep);
         steps.add(githubCommitStep);
 

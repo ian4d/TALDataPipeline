@@ -138,4 +138,8 @@ gradle-app.setting
 **/build/
 
 # End of https://www.gitignore.io/api/osx,gradle,intellij\
-data/
+_data/
+
+# Used by docker compose, stores secrets
+.env
+.gitignore

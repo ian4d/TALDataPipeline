@@ -1,4 +1,4 @@
-package com.ianford.podcasts.tal.util;
+package com.ianford.tal.util;
 
 import java.util.function.Function;
 

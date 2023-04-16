@@ -2,25 +2,23 @@ package com.ianford.tal.steps;
 
 import com.google.gson.Gson;
 import com.ianford.podcasts.model.BasicPodcastRecord;
-import com.ianford.podcasts.model.DBPartitionKey;
-import com.ianford.podcasts.model.DBSortKey;
-import com.ianford.podcasts.model.jekyll.Act;
-import com.ianford.podcasts.model.jekyll.Contributor;
+import com.ianford.podcasts.model.ParsedEpisode;
 import com.ianford.podcasts.model.jekyll.Episode;
-import com.ianford.podcasts.model.jekyll.Statement;
-import com.ianford.podcasts.tal.io.RawEpisodeParser;
+import com.ianford.tal.io.RawEpisodeParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -34,7 +32,6 @@ public class BackfillEpisodeDataStep implements PipelineStep {
 
     private final DynamoDbTable<BasicPodcastRecord> table;
     private final RawEpisodeParser episodeParser;
-
     private final Gson gson;
 
     /**
@@ -54,153 +51,98 @@ public class BackfillEpisodeDataStep implements PipelineStep {
     @SuppressWarnings("unused")
     @Override
     public void run() throws IOException {
-        // Converted all files into data
+
+        // Get a list of every single file in the raw download folder
         List<Path> allFilePaths =
-                Files.list(Path.of("data/downloads/raw"))
+                Files.list(Path.of("_data/downloads/raw"))
                         .collect(Collectors.toList());
 
-        // Write all the records in our raw file to our DB
-        List<BasicPodcastRecord> writtenContents = allFilePaths.stream()
-                .peek(path -> logger.info("Reading file at {}",
-                                          path.toString()))
-                .filter(path -> !episodeIsAlreadyParsed(path))
-                .map(episodeParser)
-                .flatMap(List::stream)
-                .peek(record -> logger.debug(record.toString()))
-                .map(this::writeRecordToDB)// write each record to DB
-                .collect(Collectors.toList());
+        // Parse all raw episode files
+        List<ParsedEpisode> parsedEpisodeList = buildParsedEpisodeList(allFilePaths);
 
-        // These are the records we actually wrote
-        logger.debug("writtenContents: {}",
-                     writtenContents.size());
+        // Read all lines of current episode list and remove last entry
 
-        // Clean up raw data when done
-        allFilePaths.stream()
-                .forEach(path -> path.toFile()
-                        .deleteOnExit());
+        List<String> episodeList = new ArrayList<>();
+        File episodeListFile = Path.of("_data/blog/episodeList.json")
+                .toFile();
+        if (episodeListFile.exists()) {
+            episodeList = Files.readAllLines(Path.of("_data/blog/episodeList.json"));
+            episodeList.remove(episodeList.size() - 1);
+        } else {
+            episodeList.add("[");
+        }
 
 
-        Map<Integer, Episode> episodeMap = new HashMap<>();
-//        Map<String, Contributor> contributorMap = new HashMap<>();
+        // For each parsed episode write that episode to a standalone file
+        for (ParsedEpisode parsedEp : parsedEpisodeList) {
+            Map<Integer, Episode> episodeMap = parsedEp.getEpisodeMap();
+            for (Integer epNum : episodeMap.keySet()) {
+                Path outputPath = Path.of(String.format("_data/blog/episodes/%s.json",
+                        epNum));
 
-        // Iterate over written records
-        for (BasicPodcastRecord record : writtenContents) {
-            String primaryKey = record.getPrimaryKey();
-            Matcher episodeNumberMatcher = DBPartitionKey.EPISODE_NUMBER.matcher(primaryKey);
-            if (!episodeNumberMatcher.matches()) continue;
+                Episode episode = episodeMap.get(epNum);
 
-            int episodeNumber = Integer.parseInt(episodeNumberMatcher.group(1));
-            int actNumber;
-            Act act;
+                String serializedEpisode = gson.toJson(episodeMap.get(epNum));
+                Files.writeString(outputPath,
+                        serializedEpisode);
 
-            Episode episode = episodeMap.computeIfAbsent(episodeNumber,
-                                                         (epNum) -> new Episode(epNum));
+                String summary = gson.toJson(episode.summarize());
+                episodeList.add(summary);
 
-            Statement statement;
-
-            String sortValue = record.getSort();
-            DBSortKey keyType = DBSortKey.resolveKeyType(sortValue)
-                    .orElseThrow();
-            // What type of record is this?
-            logger.info("KEY TYPE: {}",
-                        keyType);
-            switch (keyType) {
-                case ACT_NAME:
-
-                    // See if the episode contains this act or not
-
-                    Matcher actNameMatcher = DBSortKey.ACT_NAME.matcher(sortValue);
-                    if (!actNameMatcher.matches()) continue;
-                    actNumber = Integer.parseInt(actNameMatcher.group(1));
-
-                    act = episode.getActMap()
-                            .computeIfAbsent(actNumber,
-                                             (num) -> new Act(num));
-                    act.setActName(record.getValue());
-
-                    break;
-                case ACT_STATEMENT:
-                    Matcher actStatementMatcher = DBSortKey.ACT_STATEMENT.matcher(sortValue);
-                    if (!actStatementMatcher.matches()) continue;
-
-                    actNumber = Integer.parseInt(actStatementMatcher.group(1));
-                    act = episode.getActMap()
-                            .computeIfAbsent(actNumber,
-                                             (num) -> new Act(num));
-                    statement = gson.fromJson(record.getValue(),
-                                              Statement.class);
-                    act.getStatementList()
-                            .add(statement);
-
-
-                    Contributor contributor = episode.getContributorMap()
-                            .computeIfAbsent(statement.getSpeakerName(),
-                                             (name) -> new Contributor(name));
-                    contributor.getEpisodes()
-                            .computeIfAbsent(episodeNumber,
-                                             (num) -> episode.getEpisodeTitle());
-                    contributor.getStatements()
-                            .add(statement.getText());
-                    contributor.getSpokenWords()
-                            .addAll(List.of(statement.getText()
-                                                    .split("\\s")));
-
-                    break;
-                case EPISODE_NAME:
-                    episode.setEpisodeTitle(record.getValue());
-                    break;
-                case EPISODE_STATEMENT:
-                    statement = gson.fromJson(record.getValue(),
-                                              Statement.class);
-                    episode.getStatementList()
-                            .add(statement);
-                    break;
-                case LATEST_EPISODE:
-                    // we don't care about this I don't think
-                    break;
             }
-
-
         }
 
-        // Could write the entrySet instead of we want to avoid numeric keys
-        for (Integer epNum : episodeMap.keySet()) {
-            Path outputPath = Path.of(String.format("data/blog/episodes/%s.json",
-                                                    epNum));
-            String serializedEpisode = gson.toJson(episodeMap.get(epNum));
-            Files.writeString(outputPath,
-                              serializedEpisode);
-        }
+        episodeList.add("]");
+        logger.info("Final episode list: {}",
+                episodeList.toString());
+        Files.write(episodeListFile.toPath(),
+                episodeList);
 
     }
 
+    /**
+     * Builds a List of ParsedEpisode objects based on raw files available in the local file system.
+     *
+     * @param allFilePaths List of Paths of every locally downloaded file
+     * @return List
+     */
+    private List<ParsedEpisode> buildParsedEpisodeList(List<Path> allFilePaths) {
+        List<ParsedEpisode> parsedEpisodeList = allFilePaths.stream()
+                .filter(path -> !episodeIsAlreadyParsed(path))
+                .map(episodeParser)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+        return parsedEpisodeList;
+    }
+
+
+    /**
+     * Determines if a parsed representation of this episode is already present on disk.
+     *
+     * @param path Path to check
+     * @return true if a parsed representation is already available locally
+     */
     boolean episodeIsAlreadyParsed(Path path) {
         logger.info("Running matcher against path {}",
-                    path.toString());
+                path.toString());
         // Get episode number from filepath
         Matcher matcher = Pattern.compile("episode-(\\d+).html")
                 .matcher(path.getFileName()
-                                 .toString());
+                        .toString());
         if (matcher.matches()) {
             String epNum = matcher.toMatchResult()
                     .group(1);
             // Need to see if this ep is already present in the DB
 
             BasicPodcastRecord record = table.getItem(Key.builder()
-                                                              .partitionValue("TAL")
-                                                              .sortValue(String.format("EP%s#NAME",
-                                                                                       epNum))
-                                                              .build());
+                    .partitionValue("TAL")
+                    .sortValue(String.format("EP%s#NAME",
+                            epNum))
+                    .build());
             return Objects.nonNull(record);
 
         }
         return false;
-    }
-
-    BasicPodcastRecord writeRecordToDB(BasicPodcastRecord record) {
-        logger.debug("Writing record: {}",
-                     record.toString());
-        table.putItem(record);
-        return record;
     }
 }
