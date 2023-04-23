@@ -6,12 +6,7 @@ import com.ianford.tal.guice.DynamoDBModule;
 import com.ianford.tal.guice.EnvironmentModule;
 import com.ianford.tal.guice.EpisodeDataModule;
 import com.ianford.tal.guice.PipelineModule;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.ianford.tal.model.PipelineConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,8 +28,9 @@ class Runner {
 
         // Parse Options
         Injector injector = configureInjector();
+        PipelineConfig pipelineConfig = injector.getInstance(PipelineConfig.class);
         injector.getInstance(Pipeline.class)
-                .runPipeline();
+                .runPipeline(pipelineConfig);
         logger.info("Pipeline complete");
     }
 

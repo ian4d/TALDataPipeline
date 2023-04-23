@@ -1,14 +1,14 @@
 package com.ianford.tal.io;
 
 import com.google.gson.Gson;
-import com.ianford.podcasts.model.BasicPodcastRecord;
-import com.ianford.podcasts.model.DBPartitionKey;
-import com.ianford.podcasts.model.DBSortKey;
+import com.ianford.podcasts.model.db.PodcastDBDBRecord;
+import com.ianford.podcasts.model.db.DBPartitionKey;
+import com.ianford.podcasts.model.db.DBSortKey;
 import com.ianford.podcasts.model.ParsedEpisode;
-import com.ianford.podcasts.model.jekyll.Act;
-import com.ianford.podcasts.model.jekyll.Contributor;
-import com.ianford.podcasts.model.jekyll.Episode;
-import com.ianford.podcasts.model.jekyll.Statement;
+import com.ianford.podcasts.model.jekyll.BlogEpisodeAct;
+import com.ianford.podcasts.model.jekyll.BlogEpisodeStatement;
+import com.ianford.podcasts.model.jekyll.BlogEpisodeContributor;
+import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.nodes.Document;
@@ -27,7 +27,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("unused")
 public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>> {
 
     private static final Logger logger = LogManager.getLogger();
@@ -90,16 +89,16 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
         final Elements actElementList = divContent.getElementsByClass("act");
 
         // Create stores for data we'll be parsing out
-        final List<BasicPodcastRecord> episodeRecordList = new ArrayList<>();
-        final Map<Integer, Episode> episodeMap = new HashMap<>();
-        Episode episode = episodeMap.computeIfAbsent(episodeNumber,
-                (epNum) -> new Episode(epNum));
+        final List<PodcastDBDBRecord> episodeRecordList = new ArrayList<>();
+        final Map<Integer, BlogEpisode> episodeMap = new HashMap<>();
+        BlogEpisode blogEpisode = episodeMap.computeIfAbsent(episodeNumber,
+                (epNum) -> new BlogEpisode(epNum));
 
         // Set title of episode
-        episode.setEpisodeTitle(episodeName);
+        blogEpisode.setEpisodeTitle(episodeName);
 
         // Record for title of episode
-        BasicPodcastRecord episodeTitleRecord = new BasicPodcastRecord();
+        PodcastDBDBRecord episodeTitleRecord = new PodcastDBDBRecord();
         episodeTitleRecord.setPrimaryKey(DBPartitionKey.EPISODE_NUMBER.format(episodeNumber));
         episodeTitleRecord.setSort(DBSortKey.EPISODE_NAME.getValue());
         episodeTitleRecord.setValue(episodeName);
@@ -112,16 +111,16 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
         for (final Element actElement : actElementList) {
 
             // Make an act object if it doesn't exist already
-            Act act = episode.getActMap()
+            BlogEpisodeAct blogEpisodeAct = blogEpisode.getActMap()
                     .computeIfAbsent(actNumber,
-                            (num) -> new Act(num));
+                            (num) -> new BlogEpisodeAct(num));
 
             // Set name of act
             final String actName = extractActName(actElement);
-            act.setActName(actName);
+            blogEpisodeAct.setActName(actName);
 
             // Create DB record for act name
-            BasicPodcastRecord actNameRecord = new BasicPodcastRecord();
+            PodcastDBDBRecord actNameRecord = new PodcastDBDBRecord();
             actNameRecord.setPrimaryKey(DBPartitionKey.EPISODE_NUMBER.format(episodeNumber));
             actNameRecord.setSort(DBSortKey.ACT_NAME.format(actNumber));
             actNameRecord.setValue(actName);
@@ -138,36 +137,36 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
                     final String paragraphText = paragraph.text();
 
                     String partitionKey = DBPartitionKey.EPISODE_NUMBER.format(episodeNumber);
-                    Statement statement = new Statement(speakerName,
+                    BlogEpisodeStatement blogEpisodeStatement = new BlogEpisodeStatement(speakerName,
                             paragraphText);
 
                     // Add statement to current act
-                    act.getStatementList()
-                            .add(statement);
-                    episode.getStatementList()
-                            .add(statement);
+                    blogEpisodeAct.getStatementList()
+                            .add(blogEpisodeStatement);
+                    blogEpisode.getStatementList()
+                            .add(blogEpisodeStatement);
 
                     // Build up contributor
-                    Contributor contributor = act.getContributorMap()
-                            .computeIfAbsent(statement.getSpeakerName(),
-                                    (missingSpeakerName) -> new Contributor(missingSpeakerName));
-                    contributor.getStatements()
+                    BlogEpisodeContributor blogEpisodeContributor = blogEpisodeAct.getContributorMap()
+                            .computeIfAbsent(blogEpisodeStatement.getSpeakerName(),
+                                    (missingSpeakerName) -> new BlogEpisodeContributor(missingSpeakerName));
+                    blogEpisodeContributor.getStatements()
                             .add(paragraphText);
-                    contributor.getSpokenWords()
+                    blogEpisodeContributor.getSpokenWords()
                             .addAll(Arrays.stream(paragraphText.split("/\\W/"))
                                     .collect(Collectors.toSet()));
-                    contributor.getEpisodes()
+                    blogEpisodeContributor.getEpisodes()
                             .computeIfAbsent(episodeNumber,
-                                    (epNum) -> episode.getEpisodeTitle());
+                                    (epNum) -> blogEpisode.getEpisodeTitle());
 
-                    episode.getContributorMap()
-                            .computeIfAbsent(statement.getSpeakerName(),
-                                    (missingSpeakerName) -> contributor);
+                    blogEpisode.getContributorMap()
+                            .computeIfAbsent(blogEpisodeStatement.getSpeakerName(),
+                                    (missingSpeakerName) -> blogEpisodeContributor);
 
                     // Serialize statement for DB
-                    String serializedStatement = gson.toJson(statement);
+                    String serializedStatement = gson.toJson(blogEpisodeStatement);
 
-                    BasicPodcastRecord actStatementRecord = new BasicPodcastRecord();
+                    PodcastDBDBRecord actStatementRecord = new PodcastDBDBRecord();
                     actStatementRecord.setPrimaryKey(partitionKey);
                     actStatementRecord.setSort(DBSortKey.ACT_STATEMENT.format(actNumber,
                             statementCountForAct,
@@ -176,7 +175,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
                     episodeRecordList.add(actStatementRecord);
                     statementCountForAct++;
 
-                    BasicPodcastRecord episodeStatementRecord = new BasicPodcastRecord();
+                    PodcastDBDBRecord episodeStatementRecord = new PodcastDBDBRecord();
                     episodeStatementRecord.setPrimaryKey(partitionKey);
                     episodeStatementRecord.setSort(DBSortKey.EPISODE_STATEMENT.format(statementCountForEpisode,
                             startTime));

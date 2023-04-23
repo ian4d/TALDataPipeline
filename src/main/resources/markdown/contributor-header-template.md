@@ -1,19 +1,19 @@
 ---
-layout: contributor
+layout: blogEpisodeContributor
 title: "%s"
-contributor: %s
+blogEpisodeContributor: %s
 ---
-{%% assign person = site.data.contributors[page.contributor] %%}
+{%% assign person = site.data.contributors[page.blogEpisodeContributor] %%}
 
 So what can I tell you about {{ person.name }}?
 
 Well, {{ person.name }} has appeared in the following episodes: {{ person.episodes }}
 
 <ul>
-{%% for episode in person.episodes %%}
-    <li class="episode-container">
-      <span class="episode-link">
-        <a href="/episodes/{{ episode }}.html">{{ episode }}</a>
+{%% for blogEpisode in person.episodes %%}
+    <li class="blogEpisode-container">
+      <span class="blogEpisode-link">
+        <a href="/episodes/{{ blogEpisode }}.html">{{ blogEpisode }}</a>
       </span>
     </li>
 {%% endfor %%}

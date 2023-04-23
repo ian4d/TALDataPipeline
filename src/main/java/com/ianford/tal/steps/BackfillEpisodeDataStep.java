@@ -1,16 +1,16 @@
 package com.ianford.tal.steps;
 
 import com.google.gson.Gson;
-import com.ianford.podcasts.model.BasicPodcastRecord;
 import com.ianford.podcasts.model.ParsedEpisode;
-import com.ianford.podcasts.model.jekyll.Episode;
+import com.ianford.podcasts.model.db.PodcastDBDBRecord;
+import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import com.ianford.tal.io.RawEpisodeParser;
+import com.ianford.tal.model.PipelineConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +30,7 @@ public class BackfillEpisodeDataStep implements PipelineStep {
 
     private static final Logger logger = LogManager.getLogger();
 
-    private final DynamoDbTable<BasicPodcastRecord> table;
+    private final DynamoDbTable<PodcastDBDBRecord> table;
     private final RawEpisodeParser episodeParser;
     private final Gson gson;
 
@@ -41,32 +41,32 @@ public class BackfillEpisodeDataStep implements PipelineStep {
      * @param episodeParser Used to convert raw HTML files into episode data.
      * @param gson          Used to serialize and deserialize statements
      */
-    @SuppressWarnings("unused")
-    public BackfillEpisodeDataStep(DynamoDbTable<BasicPodcastRecord> table, RawEpisodeParser episodeParser, Gson gson) {
+    public BackfillEpisodeDataStep(DynamoDbTable<PodcastDBDBRecord> table, RawEpisodeParser episodeParser, Gson gson) {
         this.table = table;
         this.episodeParser = episodeParser;
         this.gson = gson;
     }
 
-    @SuppressWarnings("unused")
     @Override
-    public void run() throws IOException {
+    public void run(PipelineConfig pipelineConfig) throws IOException {
 
         // Get a list of every single file in the raw download folder
-        List<Path> allFilePaths =
-                Files.list(Path.of("_data/downloads/raw"))
-                        .collect(Collectors.toList());
+        Path rawDownloadDir = pipelineConfig.getWorkingDirectory()
+                .resolve(pipelineConfig.getLocalDownloadDirectory());
+
+        List<Path> allFilePaths = Files.list(rawDownloadDir)
+                .collect(Collectors.toList());
 
         // Parse all raw episode files
         List<ParsedEpisode> parsedEpisodeList = buildParsedEpisodeList(allFilePaths);
 
         // Read all lines of current episode list and remove last entry
-
         List<String> episodeList = new ArrayList<>();
-        File episodeListFile = Path.of("_data/blog/episodeList.json")
-                .toFile();
-        if (episodeListFile.exists()) {
-            episodeList = Files.readAllLines(Path.of("_data/blog/episodeList.json"));
+        Path episodeListPath = pipelineConfig.getWorkingDirectory()
+                .resolve(pipelineConfig.getEpisodeListFilepath());
+        if (episodeListPath.toFile()
+                .exists()) {
+            episodeList = Files.readAllLines(episodeListPath);
             episodeList.remove(episodeList.size() - 1);
         } else {
             episodeList.add("[");
@@ -75,27 +75,26 @@ public class BackfillEpisodeDataStep implements PipelineStep {
 
         // For each parsed episode write that episode to a standalone file
         for (ParsedEpisode parsedEp : parsedEpisodeList) {
-            Map<Integer, Episode> episodeMap = parsedEp.getEpisodeMap();
+            Map<Integer, BlogEpisode> episodeMap = parsedEp.getEpisodeMap();
             for (Integer epNum : episodeMap.keySet()) {
-                Path outputPath = Path.of(String.format("_data/blog/episodes/%s.json",
-                        epNum));
+                Path outputPath = pipelineConfig.getWorkingDirectory()
+                        .resolve(pipelineConfig.getLocalParsedEpisodeDirectory())
+                        .resolve(String.format("episode-%s.json",
+                                epNum));
 
-                Episode episode = episodeMap.get(epNum);
-
+                BlogEpisode blogEpisode = episodeMap.get(epNum);
                 String serializedEpisode = gson.toJson(episodeMap.get(epNum));
                 Files.writeString(outputPath,
                         serializedEpisode);
 
-                String summary = gson.toJson(episode.summarize());
+                String summary = gson.toJson(blogEpisode.summarize());
                 episodeList.add(summary);
 
             }
         }
 
         episodeList.add("]");
-        logger.info("Final episode list: {}",
-                episodeList.toString());
-        Files.write(episodeListFile.toPath(),
+        Files.write(episodeListPath,
                 episodeList);
 
     }
@@ -135,7 +134,7 @@ public class BackfillEpisodeDataStep implements PipelineStep {
                     .group(1);
             // Need to see if this ep is already present in the DB
 
-            BasicPodcastRecord record = table.getItem(Key.builder()
+            PodcastDBDBRecord record = table.getItem(Key.builder()
                     .partitionValue("TAL")
                     .sortValue(String.format("EP%s#NAME",
                             epNum))

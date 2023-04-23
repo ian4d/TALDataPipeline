@@ -1,4 +1,4 @@
-package com.ianford.podcasts.model;
+package com.ianford.podcasts.model.db;
 
 import java.util.Arrays;
 import java.util.Optional;

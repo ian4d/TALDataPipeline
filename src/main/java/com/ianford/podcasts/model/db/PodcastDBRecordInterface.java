@@ -1,4 +1,4 @@
-package com.ianford.podcasts.model;
+package com.ianford.podcasts.model.db;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
@@ -7,7 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
  */
 @SuppressWarnings("unused")
 @DynamoDbBean
-public interface PodcastRecordInterface {
+public interface PodcastDBRecordInterface {
 
     String getPrimaryKey();
 

@@ -6,22 +6,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Episode {
+public class BlogEpisode {
 
     private final int episodeNumber;
     private String episodeTitle;
 
-    private Map<String, Contributor> contributorMap;
+    private Map<String, BlogEpisodeContributor> contributorMap;
 
-    private Map<Integer, Act> actMap;
+    private Map<Integer, BlogEpisodeAct> actMap;
 
-    private final List<Statement> statementList;
+    private final List<BlogEpisodeStatement> blogEpisodeStatementList;
 
-    public Episode(int episodeNumber) {
+    public BlogEpisode(int episodeNumber) {
         this.episodeNumber = episodeNumber;
         this.contributorMap = new HashMap<>();
         this.actMap = new HashMap<>();
-        this.statementList = new ArrayList<>();
+        this.blogEpisodeStatementList = new ArrayList<>();
     }
 
     public int getEpisodeNumber() {
@@ -32,11 +32,11 @@ public class Episode {
         return episodeTitle;
     }
 
-    public Map<String, Contributor> getContributorMap() {
+    public Map<String, BlogEpisodeContributor> getContributorMap() {
         return contributorMap;
     }
 
-    public Map<Integer, Act> getActMap() {
+    public Map<Integer, BlogEpisodeAct> getActMap() {
         return actMap;
     }
 
@@ -44,16 +44,16 @@ public class Episode {
         this.episodeTitle = episodeTitle;
     }
 
-    public void setContributorMap(Map<String, Contributor> contributorMap) {
+    public void setContributorMap(Map<String, BlogEpisodeContributor> contributorMap) {
         this.contributorMap = contributorMap;
     }
 
-    public void setActMap(Map<Integer, Act> actMap) {
+    public void setActMap(Map<Integer, BlogEpisodeAct> actMap) {
         this.actMap = actMap;
     }
 
-    public List<Statement> getStatementList() {
-        return statementList;
+    public List<BlogEpisodeStatement> getStatementList() {
+        return blogEpisodeStatementList;
     }
 
     public Summary summarize() {
@@ -61,7 +61,7 @@ public class Episode {
                 this.episodeTitle,
                 contributorMap.values()
                         .stream()
-                        .map(Contributor::getName)
+                        .map(BlogEpisodeContributor::getName)
                         .collect(Collectors.toList()));
 
     }

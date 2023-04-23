@@ -9,30 +9,28 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class EpisodeDownloader implements Function<Integer, String> {
+public class EpisodeDownloader {
 
     private static final Logger logger = LogManager.getLogger(EpisodeDownloader.class);
 
     private final URLGenerator urlGenerator;
-    private final OutputPathGenerator outputPathGenerator;
     private final Predicate<String> existingFilePredicate;
 
     /**
      * Constructor.
      *
      * @param urlGenerator          Generates URLs to download episodes from.
-     * @param outputPathGenerator   Generates file paths to store output in.
+     * @param filenameFormat        Used to control how files are named locally.
      * @param existingFilePredicate Checks whether files exist already.
      */
     @SuppressWarnings("unused")
-    public EpisodeDownloader(URLGenerator urlGenerator,
-            OutputPathGenerator outputPathGenerator,
-            Predicate<String> existingFilePredicate) {
+    public EpisodeDownloader(
+            URLGenerator urlGenerator,
+            String filenameFormat, Predicate<String> existingFilePredicate) {
         this.urlGenerator = urlGenerator;
-        this.outputPathGenerator = outputPathGenerator;
+        this.filenameFormat = filenameFormat;
         this.existingFilePredicate = existingFilePredicate;
     }
 
@@ -63,17 +61,17 @@ public class EpisodeDownloader implements Function<Integer, String> {
      * @param episodeNumber The number of the episode to download
      * @return String
      */
-    @Override
-    public String apply(Integer episodeNumber) {
+    public Path apply(Integer episodeNumber, Path downloadDirectory) {
         logger.info("Checking status for episode {}",
                 episodeNumber);
         // If we already have the episode locally, just return a path to it
-        String outputPath = outputPathGenerator.apply(episodeNumber);
-        if (!existingFilePredicate.test(outputPath)) {
+        Path outputPath = generatePath(episodeNumber,
+                downloadDirectory);
+        if (!existingFilePredicate.test(outputPath.toString())) {
             try {
                 String episodeURL = urlGenerator.apply(episodeNumber);
                 String documentContent = getHTMLContent(episodeURL);
-                Files.write(Path.of(outputPath),
+                Files.write(outputPath,
                         documentContent.getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
                 logger.error("Exception while downloading episode {}",
@@ -86,5 +84,14 @@ public class EpisodeDownloader implements Function<Integer, String> {
                 episodeNumber,
                 outputPath);
         return outputPath;
+    }
+
+
+    private final String filenameFormat;
+
+    private Path generatePath(int episodeNum, Path destinationFolder) {
+        String fileName = String.format(filenameFormat,
+                episodeNum);
+        return destinationFolder.resolve(Path.of(fileName));
     }
 }

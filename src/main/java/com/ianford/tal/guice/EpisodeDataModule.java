@@ -8,7 +8,6 @@ import com.google.inject.Singleton;
 import com.ianford.podcasts.io.JSoupDocumentLoader;
 import com.ianford.tal.io.RawEpisodeParser;
 import com.ianford.tal.util.EpisodeDownloader;
-import com.ianford.tal.util.OutputPathGenerator;
 import com.ianford.tal.util.URLGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,12 +35,10 @@ public class EpisodeDataModule extends PrivateModule {
     @Exposed
     EpisodeDownloader provideEpisodeDownloader() {
         URLGenerator urlGenerator = new URLGenerator(System.getenv("TAL_URL_FORMAT"));
-        OutputPathGenerator outputPathGenerator = new OutputPathGenerator(System.getenv("TAL_LOCAL_DOWNLOAD_DIR"),
-                System.getenv("TAL_LOCAL_FILENAME_FORMAT"));
         Predicate<String> existingFilePredicate = path -> new File(path).exists();
 
         return new EpisodeDownloader(urlGenerator,
-                outputPathGenerator,
+                System.getenv("TAL_LOCAL_FILENAME_FORMAT"),
                 existingFilePredicate);
     }
 

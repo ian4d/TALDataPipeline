@@ -1,7 +1,9 @@
 package com.ianford.tal.steps;
 
+import com.ianford.tal.model.PipelineConfig;
+
 import java.io.IOException;
 
 public interface PipelineStep {
-    void run() throws IOException;
+    void run(PipelineConfig pipelineConfig) throws IOException;
 }

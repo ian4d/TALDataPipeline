@@ -1,4 +1,4 @@
-package com.ianford.podcasts.model;
+package com.ianford.podcasts.model.db;
 
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
@@ -6,18 +6,18 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @DynamoDbBean
-public class BasicPodcastRecord implements PodcastRecordInterface {
+public class PodcastDBDBRecord implements PodcastDBRecordInterface {
 
     String primaryKey;
     String sort;
     String value;
 
     @SuppressWarnings("unused")
-    public BasicPodcastRecord() {
+    public PodcastDBDBRecord() {
     }
 
     @SuppressWarnings("unused")
-    public BasicPodcastRecord(String primaryKey, String sort, String value) {
+    public PodcastDBDBRecord(String primaryKey, String sort, String value) {
         this.primaryKey = primaryKey;
         this.sort = sort;
         this.value = value;

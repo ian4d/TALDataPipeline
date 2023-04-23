@@ -1,11 +1,11 @@
 package com.ianford.podcasts.model.jekyll;
 
-public class Statement {
+public class BlogEpisodeStatement {
 
     private final String speakerName;
     private final String text;
 
-    public Statement(String speakerName, String text) {
+    public BlogEpisodeStatement(String speakerName, String text) {
         this.speakerName = speakerName;
         this.text = text;
     }

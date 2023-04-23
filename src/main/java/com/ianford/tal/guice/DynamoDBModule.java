@@ -4,7 +4,7 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
-import com.ianford.podcasts.model.BasicPodcastRecord;
+import com.ianford.podcasts.model.db.PodcastDBDBRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -16,7 +16,6 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
-import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
 import java.net.URI;
@@ -75,10 +74,10 @@ public class DynamoDBModule extends PrivateModule {
      */
     @Provides
     @Exposed
-    DynamoDbTable<BasicPodcastRecord> provideRecordTable(DynamoDbEnhancedClient dbClient,
+    DynamoDbTable<PodcastDBDBRecord> provideRecordTable(DynamoDbEnhancedClient dbClient,
                                                          @Named(EnvironmentModule.TABLE_NAME) String tableName) {
-        DynamoDbTable<BasicPodcastRecord> episodeTable =
-                dbClient.table(tableName, TableSchema.fromBean(BasicPodcastRecord.class));
+        DynamoDbTable<PodcastDBDBRecord> episodeTable =
+                dbClient.table(tableName, TableSchema.fromBean(PodcastDBDBRecord.class));
         try {
             logger.info("Attempting table creation");
 

@@ -1,5 +1,6 @@
 package com.ianford.tal;
 
+import com.ianford.tal.model.PipelineConfig;
 import com.ianford.tal.steps.PipelineStep;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,11 +29,11 @@ public class Pipeline {
     /**
      * Runs the pipeline
      */
-    public void runPipeline() {
+    public void runPipeline(PipelineConfig pipelineConfig) {
         logger.info("Running pipeline");
         for (PipelineStep pipelineStep : pipelineSteps) {
             try {
-                pipelineStep.run();
+                pipelineStep.run(pipelineConfig);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

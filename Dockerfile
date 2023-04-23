@@ -8,7 +8,7 @@ COPY gradle gradle
 COPY gradlew gradlew
 COPY src ./src
 RUN mkdir -p _data/downloads/raw
-RUN mkdir -p _data/blog/episodes
-RUN mkdir -p _data/blog/contributors
+RUN mkdir -p _data/episodes
+RUN mkdir -p _data/contributors
 RUN mkdir -p _posts
 CMD ./gradlew run

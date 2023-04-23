@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class Contributor {
+public class BlogEpisodeContributor {
 
     private final String name;
     private Map<Integer, String> episodes;
     private List<String> statements;
     private Set<String> spokenWords;
 
-    public Contributor(String name) {
+    public BlogEpisodeContributor(String name) {
         this.name = name;
         this.episodes = new HashMap<>();
         this.statements = new ArrayList<>();

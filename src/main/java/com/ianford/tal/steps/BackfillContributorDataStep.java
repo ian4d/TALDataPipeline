@@ -1,10 +1,11 @@
 package com.ianford.tal.steps;
 
 import com.google.gson.Gson;
-import com.ianford.podcasts.model.BasicPodcastRecord;
-import com.ianford.podcasts.model.DBPartitionKey;
-import com.ianford.podcasts.model.DBSortKey;
-import com.ianford.podcasts.model.jekyll.Statement;
+import com.ianford.podcasts.model.db.PodcastDBDBRecord;
+import com.ianford.podcasts.model.db.DBPartitionKey;
+import com.ianford.podcasts.model.db.DBSortKey;
+import com.ianford.podcasts.model.jekyll.BlogEpisodeStatement;
+import com.ianford.tal.model.PipelineConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
@@ -14,7 +15,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,23 +28,23 @@ public class BackfillContributorDataStep implements PipelineStep {
 
     private static final Logger logger = LogManager.getLogger();
 
-    private final DynamoDbTable<BasicPodcastRecord> table;
+    private final DynamoDbTable<PodcastDBDBRecord> table;
     private final Gson gson;
 
 
-    public BackfillContributorDataStep(DynamoDbTable<BasicPodcastRecord> table, Gson gson) {
+    public BackfillContributorDataStep(DynamoDbTable<PodcastDBDBRecord> table, Gson gson) {
         this.table = table;
         this.gson = gson;
     }
 
     @Override
-    public void run() {
+    public void run(PipelineConfig pipelineConfig) {
         logger.info("Running BuildContributorDataStep");
         // Grab all entries from that episode
         // Build local contributor model for all of those
 
         // Retrieve latest episode
-        BasicPodcastRecord record = table.getItem(
+        PodcastDBDBRecord record = table.getItem(
                 Key.builder()
                         .partitionValue(DBPartitionKey.PODCAST_NAME.getValue())
                         .sortValue(DBSortKey.LATEST_EPISODE.getValue())
@@ -52,7 +52,7 @@ public class BackfillContributorDataStep implements PipelineStep {
 
         // Get the number from the latest episode record
         int latestEpNumber = Optional.ofNullable(record)
-                .map(BasicPodcastRecord::getValue)
+                .map(PodcastDBDBRecord::getValue)
                 .map(Integer::parseInt)
                 .orElseGet(() -> 1);
 
@@ -71,17 +71,17 @@ public class BackfillContributorDataStep implements PipelineStep {
         Map<String, List<String>> statementsByContributor = new HashMap<>();
 
 
-        PageIterable<BasicPodcastRecord> queryResults = table.query(queryEnhancedRequest);
-        SdkIterable<BasicPodcastRecord> iterable = queryResults.items();
-        for (BasicPodcastRecord queryRecord : iterable) {
+        PageIterable<PodcastDBDBRecord> queryResults = table.query(queryEnhancedRequest);
+        SdkIterable<PodcastDBDBRecord> iterable = queryResults.items();
+        for (PodcastDBDBRecord queryRecord : iterable) {
             logger.info("STATEMENT: {}",
                         queryRecord);
             // Deserialize statement
-            Statement statement = gson.fromJson(queryRecord.getValue(),
-                                                Statement.class);
-            List<String> statementList = statementsByContributor.computeIfAbsent(statement.getSpeakerName(),
+            BlogEpisodeStatement blogEpisodeStatement = gson.fromJson(queryRecord.getValue(),
+                                                BlogEpisodeStatement.class);
+            List<String> statementList = statementsByContributor.computeIfAbsent(blogEpisodeStatement.getSpeakerName(),
                                                                                  (str) -> new ArrayList<>());
-            statementList.add(statement.getText());
+            statementList.add(blogEpisodeStatement.getText());
 
         }
 

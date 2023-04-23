@@ -1,4 +1,4 @@
-package com.ianford.podcasts.model;
+package com.ianford.podcasts.model.git;
 
 public class GitConfiguration {
     private final String username;
