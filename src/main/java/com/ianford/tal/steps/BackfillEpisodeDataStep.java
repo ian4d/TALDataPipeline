@@ -89,8 +89,10 @@ public class BackfillEpisodeDataStep implements PipelineStep {
 
                 String summary = gson.toJson(blogEpisode.summarize());
                 episodeList.add(summary);
-
             }
+
+            pipelineConfig.getParsedEpisodes()
+                    .add(parsedEp);
         }
 
         episodeList.add("]");

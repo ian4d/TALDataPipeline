@@ -1,5 +1,7 @@
 package com.ianford.tal.steps;
 
+import com.ianford.podcasts.model.ParsedEpisode;
+import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import com.ianford.tal.model.PipelineConfig;
 import org.apache.commons.text.StringSubstitutor;
 
@@ -21,12 +23,22 @@ public class CreateBlogPostStep implements PipelineStep {
         String postTemplate = null;
         try {
             postTemplate = loadPostTemplate();
-            String postContent = buildPostContents(postTemplate);
 
-            // Write file to _posts directory
-            String newPostFilename = writePostToLocalRepository(pipelineConfig.getWorkingDirectory()
-                            .resolve(pipelineConfig.getLocalPostsDirectory()),
-                    postContent);
+            for (ParsedEpisode parsedEpisode : pipelineConfig.getParsedEpisodes()) {
+                Map<Integer, BlogEpisode> episodeMap = parsedEpisode.getEpisodeMap();
+                for (BlogEpisode episode : episodeMap.values()) {
+                    String postContent = buildPostContents(postTemplate,
+                            episode);
+
+                    // Write file to _posts directory
+                    String newPostFilename = writePostToLocalRepository(
+                            pipelineConfig.getWorkingDirectory()
+                                    .resolve(pipelineConfig.getLocalPostsDirectory()),
+                            postContent);
+                }
+            }
+
+
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -80,7 +92,7 @@ public class CreateBlogPostStep implements PipelineStep {
      * @param template Template to load for this post
      * @return String contents of the post
      */
-    private String buildPostContents(String template) {
+    private String buildPostContents(String template, BlogEpisode episode) {
         Map<String, String> tokenMap = new HashMap<>();
         // TODO: Parameterize post layout using environment variables
         tokenMap.put("layout",
@@ -88,11 +100,12 @@ public class CreateBlogPostStep implements PipelineStep {
 
         // TODO: Set post title based on episode being parsed
         tokenMap.put("title",
-                "New Episode!");
+                episode.getEpisodeTitle());
 
         // TODO: Set post body based on episode being parsed.
         tokenMap.put("content",
                 "Here is a description of the episode");
+
         StringSubstitutor postSubstitutor = new StringSubstitutor(tokenMap);
         return postSubstitutor.replace(template);
     }

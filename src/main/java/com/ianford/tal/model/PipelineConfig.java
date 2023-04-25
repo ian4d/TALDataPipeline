@@ -1,8 +1,11 @@
 package com.ianford.tal.model;
 
+import com.ianford.podcasts.model.ParsedEpisode;
 import org.eclipse.jgit.api.Git;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PipelineConfig {
 
@@ -14,6 +17,10 @@ public class PipelineConfig {
     private Path localPostsDirectory;
     private Path contributorListFilepath;
     private Path episodeListFilepath;
+
+    private List<Path> downloadedEpisodes = new ArrayList<>();
+
+    private List<ParsedEpisode> parsedEpisodes = new ArrayList<>();
 
     // List of modified episodes
     // Title
@@ -85,5 +92,21 @@ public class PipelineConfig {
 
     public void setLocalPostsDirectory(Path localPostsDirectory) {
         this.localPostsDirectory = localPostsDirectory;
+    }
+
+    public List<Path> getDownloadedEpisodes() {
+        return downloadedEpisodes;
+    }
+
+    public void setDownloadedEpisodes(List<Path> downloadedEpisodes) {
+        this.downloadedEpisodes = downloadedEpisodes;
+    }
+
+    public List<ParsedEpisode> getParsedEpisodes() {
+        return parsedEpisodes;
+    }
+
+    public void setParsedEpisodes(List<ParsedEpisode> parsedEpisodes) {
+        this.parsedEpisodes = parsedEpisodes;
     }
 }
