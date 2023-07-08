@@ -14,6 +14,11 @@ public class BlogEpisodeContributor {
     private List<String> statements;
     private Set<String> spokenWords;
 
+    /**
+     * Constructor.
+     *
+     * @param name Name of the contributor.
+     */
     public BlogEpisodeContributor(String name) {
         this.name = name;
         this.episodes = new HashMap<>();

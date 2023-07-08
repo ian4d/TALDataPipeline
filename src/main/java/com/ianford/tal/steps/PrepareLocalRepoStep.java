@@ -6,12 +6,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.TextProgressMonitor;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.URIish;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * This step checks out the website from its Git repository and prepares the file system for what we'll be doing later.
@@ -35,14 +41,46 @@ public class PrepareLocalRepoStep implements PipelineStep {
     public void run(PipelineConfig pipelineConfig) throws IOException {
         // TODO: Parameterize temp directory prefix
 
-        logger.info("Preparing local repository with configuration: {}", gitConfig.toString());
-
+        logger.info("Preparing local repository with configuration: {}",
+                gitConfig.toString());
         File tempDir = Files.createTempDirectory("github-stager")
                 .toFile();
         tempDir.deleteOnExit();
 
-        try (Git git = cloneGitRepo(tempDir,
-                this.gitConfig.getUrl())) {
+
+        try {
+            Git git = cloneGitRepo(tempDir,
+                    this.gitConfig.getUrl(),
+                    "init");
+
+            List<Ref> branchList = git.branchList()
+                    .call();
+
+            String remoteRefName = String.format("refs/heads/init");
+            logger.info("List of branches:");
+            boolean remoteExists = branchList.stream()
+                    .peek(ref -> logger.info("- {}",
+                            ref.getName()))
+                    .anyMatch(ref -> ref.getName()
+                            .equals(remoteRefName));
+
+            git.checkout()
+                    .setName(gitConfig.getBranch())
+                    .setForceRefUpdate(true)
+                    .setCreateBranch(!remoteExists)
+                    .setAllPaths(true)
+                    .call();
+
+            if (!remoteExists) {
+                git.remoteAdd()
+                        .setName(remoteRefName)
+                        .setUri(new URIish("https://github.com/ian4d/TALWebsite.git"))
+                        .call();
+            }
+
+            git.pull()
+                    .call();
+
             pipelineConfig.setLocalRepository(git);
             pipelineConfig.setWorkingDirectory(tempDir.toPath());
 
@@ -63,6 +101,8 @@ public class PrepareLocalRepoStep implements PipelineStep {
                     pipelineConfig.getContributorListFilepath());
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -82,8 +122,9 @@ public class PrepareLocalRepoStep implements PipelineStep {
 
     /**
      * Makes sure the provided file is writeable and readable.
+     *
      * @param rootPath Path to resolve subdirectory from
-     * @param filePath  Path to file
+     * @param filePath Path to file
      */
     private void prepareFilePermissions(Path rootPath, Path filePath) {
         File file = rootPath.resolve(filePath)
@@ -102,11 +143,25 @@ public class PrepareLocalRepoStep implements PipelineStep {
      *
      * @throws GitAPIException Thrown if repo can't be cloned.
      */
-    private Git cloneGitRepo(File tempDir, String endpoint) throws GitAPIException {
-        return Git.cloneRepository()
-                .setURI(endpoint)
-                .setDirectory(tempDir)
-                .setProgressMonitor(new TextProgressMonitor())
-                .call();
+    private Git cloneGitRepo(File tempDir, String endpoint, String branch) throws GitAPIException {
+        try {
+            // Clone repo to filesystem
+            Git.cloneRepository()
+                    .setURI(endpoint)
+                    .setCloneAllBranches(true)
+                    .setDirectory(tempDir)
+                    .setProgressMonitor(new TextProgressMonitor())
+                    .setBranch(branch)
+                    .call();
+
+            // Build repo from clone
+            FileRepositoryBuilder builder = new FileRepositoryBuilder();
+            Repository repository = builder.readEnvironment()
+                    .findGitDir(tempDir)
+                    .build();
+            return new Git(repository);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

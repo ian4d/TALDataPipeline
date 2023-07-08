@@ -1,6 +1,7 @@
 package com.ianford.tal.steps;
 
 import com.ianford.podcasts.model.git.GitConfiguration;
+import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import com.ianford.tal.model.PipelineConfig;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
@@ -8,19 +9,16 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -47,48 +45,75 @@ public class GithubCommitStep implements PipelineStep {
             git.add()
                     .addFilepattern("_data/episodes")
                     .addFilepattern("_data/episodeList.json")
+                    .addFilepattern("_data/contributors")
+                    .addFilepattern("_data/contributorList.json")
                     .addFilepattern("_posts")
                     .call();
 
             // Build Commit
-            String commitTemplate = loadCommitTemplate();
-            String commitMessage = buildCommitMessage(commitTemplate);
+
+            String commitMessage = buildCommitMessage(pipelineConfig);
             git.commit()
                     .setMessage(commitMessage)
                     .call();
 
+            String pushRemote = String.format("origin",
+                    this.gitConfig.getBranch());
+            CredentialsProvider gitCreds = new UsernamePasswordCredentialsProvider(this.gitConfig.getUsername(),
+                    this.gitConfig.getPassword());
             PushCommand pushCommand = git.push()
-                    .setRemote(this.gitConfig.getRemote())
-                    .setCredentialsProvider(new UsernamePasswordCredentialsProvider(this.gitConfig.getUsername(),
-                            this.gitConfig.getPassword()));
-            for (PushResult pushResult : pushCommand.call()) {
-                logger.info("-- push result: {}",
-                        pushResult.getRemoteUpdates());
-            }
-        } catch (GitAPIException ex) {
+//                    .setRemote("refs/heads/init")
+//                    .setRefSpecs(new RefSpec(gitConfig.getBranch() + ":" + gitConfig.getBranch()))
+                    .setCredentialsProvider(gitCreds);
+
+            pushCommand.call()
+                    .forEach(result -> logger.info(result.getRemoteUpdates()));
+
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
         }
     }
 
     /**
      * Builds a commit message for the git repo based on the provided template.
      *
-     * @param template Template to use for the message
+     * @param pipelineConfig Config object for this data pipeline
      * @return String contents of the commit.
      */
-    private String buildCommitMessage(String template) {
+    private String buildCommitMessage(PipelineConfig pipelineConfig) throws IOException, URISyntaxException {
+
+        String commitTemplate = loadCommitTemplate();
         Map<String, String> tokenMap = new HashMap<>();
+
+        List<BlogEpisode> blogEpisodeList = pipelineConfig.getParsedEpisodes()
+                .stream()
+                .flatMap(parsedEpisode -> parsedEpisode.getEpisodeMap()
+                        .values()
+                        .stream())
+                .sorted((ep1, ep2) -> Integer.compare(ep1.getEpisodeNumber(),
+                        ep2.getEpisodeNumber()))
+                .collect(Collectors.toList());
+
+        String commitTitle = String.format("Episodes: %s",
+                blogEpisodeList.stream()
+                        .map(blogEpisode -> blogEpisode.getEpisodeNumber())
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")));
+        String commitMessage = blogEpisodeList.stream()
+                .map(blogEpisode -> String.format("%s - %s",
+                        blogEpisode.getEpisodeNumber(),
+                        blogEpisode.getEpisodeTitle()))
+                .collect(Collectors.joining("\n"));
+
         // TODO: Parameterize commit title based on episode being committed
         tokenMap.put("title",
-                "TITLE -- TODO");
+                commitTitle);
 
         // TODO: Parameterize commit body based on episode being committed
         tokenMap.put("description",
-                "DESCRIPTION -- TODO");
+                commitMessage);
         StringSubstitutor commitSubstitutor = new StringSubstitutor(tokenMap);
-        return commitSubstitutor.replace(template);
+        return commitSubstitutor.replace(commitTemplate);
     }
 
 

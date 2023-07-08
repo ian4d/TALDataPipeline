@@ -21,7 +21,10 @@ public enum DBPartitionKey {
      * Episode specific data is stored using this primary key in combination with a variety of members of DBSortKey.
      */
     EPISODE_NUMBER("TAL#EP_%s",
-                   "TAL\\#EP_(\\d+)");
+                   "TAL\\#EP_(\\d+)"),
+
+
+    CONTRIBUTOR("CONTRIBUTOR#%s","CONTRIBUTOR\\#([\\w_]+)");
 
 
     private final String value;

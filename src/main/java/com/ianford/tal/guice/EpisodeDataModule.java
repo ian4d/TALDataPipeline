@@ -33,6 +33,7 @@ public class EpisodeDataModule extends PrivateModule {
      */
     @Provides
     @Exposed
+    @Singleton
     EpisodeDownloader provideEpisodeDownloader() {
         URLGenerator urlGenerator = new URLGenerator(System.getenv("TAL_URL_FORMAT"));
         Predicate<String> existingFilePredicate = path -> new File(path).exists();

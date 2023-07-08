@@ -17,6 +17,12 @@ public class PodcastDBDBRecord implements PodcastDBRecordInterface {
     }
 
     @SuppressWarnings("unused")
+    public PodcastDBDBRecord(String primaryKey, String sort) {
+        this.primaryKey = primaryKey;
+        this.sort = sort;
+    }
+
+    @SuppressWarnings("unused")
     public PodcastDBDBRecord(String primaryKey, String sort, String value) {
         this.primaryKey = primaryKey;
         this.sort = sort;

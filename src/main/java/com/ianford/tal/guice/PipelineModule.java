@@ -4,16 +4,18 @@ import com.google.gson.Gson;
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.ianford.podcasts.model.db.PodcastDBDBRecord;
 import com.ianford.podcasts.model.git.GitConfiguration;
 import com.ianford.tal.Pipeline;
 import com.ianford.tal.io.RawEpisodeParser;
 import com.ianford.tal.model.PipelineConfig;
-import com.ianford.tal.steps.BackfillContributorDataStep;
-import com.ianford.tal.steps.BackfillEpisodeDataStep;
+import com.ianford.tal.steps.BuildContributorDataStep;
+import com.ianford.tal.steps.BuildEpisodeDataStep;
 import com.ianford.tal.steps.CreateBlogPostStep;
 import com.ianford.tal.steps.DownloadEpisodeStep;
 import com.ianford.tal.steps.GithubCommitStep;
+import com.ianford.tal.steps.ParseEpisodeStep;
 import com.ianford.tal.steps.PipelineStep;
 import com.ianford.tal.steps.PrepareLocalRepoStep;
 import com.ianford.tal.util.EpisodeDownloader;
@@ -47,6 +49,7 @@ public class PipelineModule extends PrivateModule {
      */
     @Provides
     @Exposed
+    @Singleton
     Pipeline providePipeline(List<PipelineStep> pipelineStepList) {
         return new Pipeline(pipelineStepList);
     }
@@ -58,6 +61,7 @@ public class PipelineModule extends PrivateModule {
      */
     @Provides
     @Exposed
+    @Singleton
     PipelineConfig providePipelineConfig(
             @Named(EnvironmentModule.DOWNLOAD_LOCAL_PATH) Path localDownloadPath,
             @Named(EnvironmentModule.EPISODE_LOCAL_PATH) Path localParsedEpisodePath,
@@ -83,6 +87,7 @@ public class PipelineModule extends PrivateModule {
      * @return PrepareLocalRepoStep
      */
     @Provides
+    @Singleton
     PrepareLocalRepoStep providePrepareLocalRepoStep(GitConfiguration gitConfiguration) {
         return new PrepareLocalRepoStep(gitConfiguration);
     }
@@ -94,6 +99,7 @@ public class PipelineModule extends PrivateModule {
      * @return DownloadEpisodeStep
      */
     @Provides
+    @Singleton
     DownloadEpisodeStep provideDownloadEpisodeStep(
             EpisodeDownloader episodeDownloader,
             DynamoDbTable<PodcastDBDBRecord> table) {
@@ -106,13 +112,29 @@ public class PipelineModule extends PrivateModule {
      *
      * @param table         Used to write to our DB.
      * @param episodeParser Used to parse HTML episodes.
+     * @return ParseEpisodeStep
+     */
+    @Provides
+    @Singleton
+    ParseEpisodeStep provideParseEpisodeStep(DynamoDbTable<PodcastDBDBRecord> table,
+            RawEpisodeParser episodeParser) {
+        return new ParseEpisodeStep(table,
+                episodeParser);
+    }
+
+    /**
+     * Provides a step that updates our DB based on locally downloaded episodes.
+     *
+     * @param table         Used to write to our DB.
+     * @param episodeParser Used to parse HTML episodes.
      * @param gson          Used to handle serialization of jekyll data.
      * @return BackfillDatabaseStep
      */
     @Provides
-    BackfillEpisodeDataStep provideBackfillEpisodeDataStep(DynamoDbTable<PodcastDBDBRecord> table,
+    @Singleton
+    BuildEpisodeDataStep provideBackfillEpisodeDataStep(DynamoDbTable<PodcastDBDBRecord> table,
             RawEpisodeParser episodeParser, Gson gson) {
-        return new BackfillEpisodeDataStep(table,
+        return new BuildEpisodeDataStep(table,
                 episodeParser,
                 gson);
     }
@@ -124,9 +146,10 @@ public class PipelineModule extends PrivateModule {
      * @return BackfillContributorDataStep
      */
     @Provides
-    BackfillContributorDataStep provideBackfillContributorDataStep(DynamoDbTable<PodcastDBDBRecord> table,
+    @Singleton
+    BuildContributorDataStep provideBackfillContributorDataStep(DynamoDbTable<PodcastDBDBRecord> table,
             Gson gson) {
-        return new BackfillContributorDataStep(table,
+        return new BuildContributorDataStep(table,
                 gson);
     }
 
@@ -136,6 +159,7 @@ public class PipelineModule extends PrivateModule {
      * @return CreateBlogPostStep
      */
     @Provides
+    @Singleton
     CreateBlogPostStep provideCreateBlogPostStep() {
         return new CreateBlogPostStep();
     }
@@ -147,6 +171,7 @@ public class PipelineModule extends PrivateModule {
      * @return GithubCommitStep
      */
     @Provides
+    @Singleton
     GithubCommitStep provideGithubCommitStep(GitConfiguration gitConfiguration) {
         return new GithubCommitStep(gitConfiguration);
     }
@@ -158,8 +183,9 @@ public class PipelineModule extends PrivateModule {
     List<PipelineStep> providePipelineSteps(
             PrepareLocalRepoStep prepareLocalRepoStep,
             DownloadEpisodeStep downloadEpisodeStep,
-            BackfillEpisodeDataStep backfillEpisodeDataStep,
-            BackfillContributorDataStep backfillContributorDataStep,
+            ParseEpisodeStep parseEpisodeStep,
+            BuildEpisodeDataStep buildEpisodeDataStep,
+            BuildContributorDataStep buildContributorDataStep,
             CreateBlogPostStep createBlogPostStep,
             GithubCommitStep githubCommitStep
                                            ) {
@@ -171,8 +197,14 @@ public class PipelineModule extends PrivateModule {
         // Download the latest episode
         steps.add(downloadEpisodeStep);
 
+        // Parse new episodes and write them to the DB
+        steps.add(parseEpisodeStep);
+
         // Parse the data from the latest episode
-        steps.add(backfillEpisodeDataStep);
+        steps.add(buildEpisodeDataStep);
+
+        // Update Contributor Data
+        steps.add(buildContributorDataStep);
 
         // Create a blog post describing the recent changes
         steps.add(createBlogPostStep);

@@ -89,9 +89,9 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
         final Elements actElementList = divContent.getElementsByClass("act");
 
         // Create stores for data we'll be parsing out
-        final List<PodcastDBDBRecord> episodeRecordList = new ArrayList<>();
-        final Map<Integer, BlogEpisode> episodeMap = new HashMap<>();
-        BlogEpisode blogEpisode = episodeMap.computeIfAbsent(episodeNumber,
+        final List<PodcastDBDBRecord> podcastDBDBRecordList = new ArrayList<>();
+        final Map<Integer, BlogEpisode> blogEpisodeMap = new HashMap<>();
+        BlogEpisode blogEpisode = blogEpisodeMap.computeIfAbsent(episodeNumber,
                 (epNum) -> new BlogEpisode(epNum));
 
         // Set title of episode
@@ -102,12 +102,13 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
         episodeTitleRecord.setPrimaryKey(DBPartitionKey.EPISODE_NUMBER.format(episodeNumber));
         episodeTitleRecord.setSort(DBSortKey.EPISODE_NAME.getValue());
         episodeTitleRecord.setValue(episodeName);
-        episodeRecordList.add(episodeTitleRecord);
+        podcastDBDBRecordList.add(episodeTitleRecord);
 
 
         // TODO: Add air-date record
         int actNumber = 1;
         int statementCountForEpisode = 1;
+        int statementCountForContributor = 1;
         for (final Element actElement : actElementList) {
 
             // Make an act object if it doesn't exist already
@@ -124,7 +125,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
             actNameRecord.setPrimaryKey(DBPartitionKey.EPISODE_NUMBER.format(episodeNumber));
             actNameRecord.setSort(DBSortKey.ACT_NAME.format(actNumber));
             actNameRecord.setValue(actName);
-            episodeRecordList.add(actNameRecord);
+            podcastDBDBRecordList.add(actNameRecord);
 
             // Build records for statements made in act
             int statementCountForAct = 1;
@@ -153,7 +154,8 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
                     blogEpisodeContributor.getStatements()
                             .add(paragraphText);
                     blogEpisodeContributor.getSpokenWords()
-                            .addAll(Arrays.stream(paragraphText.split("/\\W/"))
+                            .addAll(Arrays.stream(paragraphText.split("/\\s/"))
+                                    .map(String::toString)
                                     .collect(Collectors.toSet()));
                     blogEpisodeContributor.getEpisodes()
                             .computeIfAbsent(episodeNumber,
@@ -172,7 +174,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
                             statementCountForAct,
                             startTime));
                     actStatementRecord.setValue(serializedStatement);
-                    episodeRecordList.add(actStatementRecord);
+                    podcastDBDBRecordList.add(actStatementRecord);
                     statementCountForAct++;
 
                     PodcastDBDBRecord episodeStatementRecord = new PodcastDBDBRecord();
@@ -180,14 +182,25 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
                     episodeStatementRecord.setSort(DBSortKey.EPISODE_STATEMENT.format(statementCountForEpisode,
                             startTime));
                     episodeStatementRecord.setValue(serializedStatement);
-                    episodeRecordList.add(episodeStatementRecord);
+                    podcastDBDBRecordList.add(episodeStatementRecord);
                     statementCountForEpisode++;
+
+
+                    PodcastDBDBRecord contributorStatementRecord = new PodcastDBDBRecord();
+                    contributorStatementRecord.setPrimaryKey(DBPartitionKey.CONTRIBUTOR.format(blogEpisodeStatement.getSpeakerName()));
+                    contributorStatementRecord.setSort(DBSortKey.CONTRIBUTOR_STATEMENT.format(
+                            episodeNumber,
+                            actNumber,
+                            statementCountForContributor,
+                            startTime));
+                    contributorStatementRecord.setValue(blogEpisodeStatement.getText());
+                    statementCountForContributor++;
                 }
             }
             actNumber++;
         }
-        return Optional.of(new ParsedEpisode(episodeRecordList,
-                episodeMap));
+        return Optional.of(new ParsedEpisode(podcastDBDBRecordList,
+                blogEpisodeMap));
     }
 
     /**

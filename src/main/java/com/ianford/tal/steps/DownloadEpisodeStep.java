@@ -64,6 +64,7 @@ public class DownloadEpisodeStep implements PipelineStep {
         // Prepare path to downloads by resolving local paths against working directory
         Path downloadPath = pipelineConfig.getWorkingDirectory()
                 .resolve(pipelineConfig.getLocalDownloadDirectory());
+
         // Download the actual episode
         pipelineConfig.getDownloadedEpisodes()
                 .add(episodeDownloader.apply(latestEpNumber,

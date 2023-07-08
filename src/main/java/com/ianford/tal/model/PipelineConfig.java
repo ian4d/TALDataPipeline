@@ -5,7 +5,9 @@ import org.eclipse.jgit.api.Git;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PipelineConfig {
 
@@ -21,6 +23,8 @@ public class PipelineConfig {
     private List<Path> downloadedEpisodes = new ArrayList<>();
 
     private List<ParsedEpisode> parsedEpisodes = new ArrayList<>();
+
+    private Set<String> contributors = new HashSet<>();
 
     // List of modified episodes
     // Title
@@ -108,5 +112,26 @@ public class PipelineConfig {
 
     public void setParsedEpisodes(List<ParsedEpisode> parsedEpisodes) {
         this.parsedEpisodes = parsedEpisodes;
+    }
+
+    public Set<String> getContributors() {
+        return contributors;
+    }
+
+    public void setContributors(Set<String> contributors) {
+        this.contributors = contributors;
+    }
+
+    /**
+     * Builds a path appropriate for episode storage for this episode
+     *
+     * @param episodeNumber
+     * @return
+     */
+    public Path buildPathForEpisode(int episodeNumber) {
+        return this.workingDirectory
+                .resolve(this.localParsedEpisodeDirectory)
+                .resolve(String.format("episode-%s.json",
+                        episodeNumber));
     }
 }
