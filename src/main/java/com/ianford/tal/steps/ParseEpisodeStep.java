@@ -1,12 +1,11 @@
 package com.ianford.tal.steps;
 
 import com.ianford.podcasts.model.ParsedEpisode;
-import com.ianford.podcasts.model.db.PodcastDBDBRecord;
 import com.ianford.tal.io.RawEpisodeParser;
 import com.ianford.tal.model.PipelineConfig;
+import com.ianford.tal.util.DBUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,17 +18,18 @@ import java.util.stream.Collectors;
 public class ParseEpisodeStep implements PipelineStep {
 
     private static final Logger logger = LogManager.getLogger();
-    private final DynamoDbTable<PodcastDBDBRecord> table;
+
+    private final DBUtil dbUtil;
     private final RawEpisodeParser episodeParser;
 
     /**
      * Constructor.
      *
-     * @param table         Used to store records we are backfilling.
+     * @param dbUtil         Used to store records we are backfilling.
      * @param episodeParser Used to convert raw HTML files into episode data.
      */
-    public ParseEpisodeStep(DynamoDbTable<PodcastDBDBRecord> table, RawEpisodeParser episodeParser) {
-        this.table = table;
+    public ParseEpisodeStep(DBUtil dbUtil, RawEpisodeParser episodeParser) {
+        this.dbUtil = dbUtil;
         this.episodeParser = episodeParser;
     }
 
@@ -51,7 +51,7 @@ public class ParseEpisodeStep implements PipelineStep {
                 .stream()
                 .map(ParsedEpisode::getDatabaseRecords)
                 .flatMap(List::stream)
-                .forEach(table::putItem);
+                .forEach(dbUtil::saveRecord);
     }
 
 

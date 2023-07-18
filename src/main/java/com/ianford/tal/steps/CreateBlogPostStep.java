@@ -74,10 +74,13 @@ public class CreateBlogPostStep implements PipelineStep {
      *
      * @throws IOException Thrown if writing the post fails.
      */
-    private String writePostToLocalRepository(Path postDirectory, String episodeTitle, String postContent) throws IOException {
+    private String writePostToLocalRepository(Path postDirectory, String episodeTitle, String postContent)
+            throws IOException {
         String postFilenameDatePrefix = LocalDateTime.now()
                 .format(DateTimeFormatter.ISO_LOCAL_DATE);
-        String postFilenameTitleInfix = Slugify.builder().build().slugify(episodeTitle);
+        String postFilenameTitleInfix = Slugify.builder()
+                .build()
+                .slugify(episodeTitle);
         String newPostFilename = String.format("%s-%s.md",
                 postFilenameDatePrefix,
                 postFilenameTitleInfix);

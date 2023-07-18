@@ -10,7 +10,6 @@ import com.ianford.podcasts.model.git.GitConfiguration;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.common.initializedfields.qual.EnsuresInitializedFields;
 
 import javax.inject.Named;
 import java.nio.file.Path;
@@ -20,13 +19,11 @@ import java.util.function.Function;
 @SuppressWarnings("unused")
 public class EnvironmentModule extends PrivateModule {
 
-    private static final Logger logger = LogManager.getLogger();
     public static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
     public static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
     public static final String DYNAMO_ENDPOINT = "DYNAMO_ENDPOINT";
     public static final String AWS_REGION = "AWS_REGION";
     public static final String TABLE_NAME = "TABLE_NAME";
-
     public static final String GIT_REPO_URL = "GIT_REPO_URL";
     public static final String GIT_REMOTE = "GIT_REMOTE";
     public static final String GIT_BRANCH = "GIT_BRANCH";
@@ -38,7 +35,7 @@ public class EnvironmentModule extends PrivateModule {
     public static final String JEKYLL_EPISODE_LIST_FILEPATH = "JEKYLL_EPISODE_LIST_FILEPATH";
     public static final String JEKYLL_CONTRIBUTOR_LIST_FILEPATH = "JEKYLL_CONTRIBUTOR_LIST_FILEPATH";
     public static final String POSTS_LOCAL_PATH = "TAL_LOCAL_POSTS_DIR";
-
+    private static final Logger logger = LogManager.getLogger();
     private Function<String, String> envLoader;
 
     @Override
@@ -48,7 +45,7 @@ public class EnvironmentModule extends PrivateModule {
         Dotenv dotenv = Dotenv.configure()
                 .load();
         envLoader = (key) -> Optional.ofNullable(System.getenv(key))
-                        .orElse(dotenv.get(key));
+                .orElse(dotenv.get(key));
     }
 
     @Provides

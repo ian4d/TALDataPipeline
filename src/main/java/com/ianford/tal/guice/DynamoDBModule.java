@@ -1,11 +1,13 @@
 package com.ianford.tal.guice;
 
+import com.google.gson.Gson;
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.ianford.podcasts.model.db.PodcastDBDBRecord;
+import com.ianford.tal.util.DBUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -84,7 +86,6 @@ public class DynamoDBModule extends PrivateModule {
      * @return DynamoDbTable
      */
     @Provides
-    @Exposed
     @Singleton
     DynamoDbTable<PodcastDBDBRecord> provideRecordTable(DynamoDbEnhancedClient enhancedClient,
             DynamoDbClient baseClient,
@@ -103,8 +104,6 @@ public class DynamoDBModule extends PrivateModule {
                 .anyMatch(existingTable -> existingTable.equals(tableName))) {
             return episodeTable;
         }
-
-
 
 
         try {
@@ -128,6 +127,14 @@ public class DynamoDBModule extends PrivateModule {
         }
 
         return episodeTable;
+    }
+
+    @Provides
+    @Exposed
+    @Singleton
+    DBUtil provideDBUtil(DynamoDbTable<PodcastDBDBRecord> table, Gson gson) {
+        return new DBUtil(table,
+                gson);
     }
 
 }

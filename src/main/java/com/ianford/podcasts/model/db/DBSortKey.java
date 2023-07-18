@@ -59,7 +59,7 @@ public enum DBSortKey {
 
     /**
      * Used to access all the statements from a specific contributor.
-     *
+     * <p>
      * Used in combo with DBPartitionKey.CONTRIBUTOR to store data like so:
      * - Partition: CONTRIBUTOR#IRA_GLASS
      * - Sort: EP_1#ACT_1#STATEMENT1#TIME_00:00:00.00
@@ -74,6 +74,18 @@ public enum DBSortKey {
     DBSortKey(String value, String regExPattern) {
         this.value = value;
         this.pattern = Pattern.compile(regExPattern);
+    }
+
+    /**
+     * Returns the type of Key represented by the input
+     *
+     * @param keyValue
+     * @return
+     */
+    public static Optional<DBSortKey> resolveKeyType(String keyValue) {
+        return Arrays.stream(DBSortKey.values())
+                .filter(key -> key.matches(keyValue))
+                .findFirst();
     }
 
     public String getValue() {
@@ -104,17 +116,5 @@ public enum DBSortKey {
      */
     public Matcher matcher(String value) {
         return this.pattern.matcher(value);
-    }
-
-    /**
-     * Returns the type of Key represented by the input
-     *
-     * @param keyValue
-     * @return
-     */
-    public static Optional<DBSortKey> resolveKeyType(String keyValue) {
-        return Arrays.stream(DBSortKey.values())
-                .filter(key -> key.matches(keyValue))
-                .findFirst();
     }
 }

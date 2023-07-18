@@ -8,9 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
@@ -57,13 +55,9 @@ public class GithubCommitStep implements PipelineStep {
                     .setMessage(commitMessage)
                     .call();
 
-            String pushRemote = String.format("origin",
-                    this.gitConfig.getBranch());
             CredentialsProvider gitCreds = new UsernamePasswordCredentialsProvider(this.gitConfig.getUsername(),
                     this.gitConfig.getPassword());
             PushCommand pushCommand = git.push()
-//                    .setRemote("refs/heads/init")
-//                    .setRefSpecs(new RefSpec(gitConfig.getBranch() + ":" + gitConfig.getBranch()))
                     .setCredentialsProvider(gitCreds);
 
             pushCommand.call()
@@ -105,11 +99,8 @@ public class GithubCommitStep implements PipelineStep {
                         blogEpisode.getEpisodeTitle()))
                 .collect(Collectors.joining("\n"));
 
-        // TODO: Parameterize commit title based on episode being committed
         tokenMap.put("title",
                 commitTitle);
-
-        // TODO: Parameterize commit body based on episode being committed
         tokenMap.put("description",
                 commitMessage);
         StringSubstitutor commitSubstitutor = new StringSubstitutor(tokenMap);
