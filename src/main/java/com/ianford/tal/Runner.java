@@ -2,6 +2,7 @@ package com.ianford.tal;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.ianford.tal.guice.DataFilterModule;
 import com.ianford.tal.guice.DynamoDBModule;
 import com.ianford.tal.guice.EnvironmentModule;
 import com.ianford.tal.guice.EpisodeDataModule;
@@ -40,7 +41,9 @@ class Runner {
      */
     private static Injector configureInjector() {
         logger.info("Configuring injector");
-        return Guice.createInjector(new EnvironmentModule(),
+        return Guice.createInjector(
+                new DataFilterModule(),
+                new EnvironmentModule(),
                 new PipelineModule(),
                 new EpisodeDataModule(),
                 new DynamoDBModule());

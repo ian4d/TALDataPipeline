@@ -5,7 +5,6 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.ianford.podcasts.model.db.PodcastDBDBRecord;
 import com.ianford.podcasts.model.git.GitConfiguration;
 import com.ianford.tal.Pipeline;
 import com.ianford.tal.io.RawEpisodeParser;
@@ -22,12 +21,12 @@ import com.ianford.tal.util.DBUtil;
 import com.ianford.tal.util.EpisodeDownloader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Used to provide and configure the pipeline that runs all of our pipeline steps
@@ -133,7 +132,7 @@ public class PipelineModule extends PrivateModule {
      */
     @Provides
     @Singleton
-    BuildEpisodeDataStep provideBackfillEpisodeDataStep(DBUtil dbUtil,
+    BuildEpisodeDataStep provideBuildEpisodeDataStep(DBUtil dbUtil,
             RawEpisodeParser episodeParser, Gson gson) {
         return new BuildEpisodeDataStep(dbUtil,
                 episodeParser,
@@ -144,14 +143,18 @@ public class PipelineModule extends PrivateModule {
      * Provides a step that updates our DB based on new contributor data.
      *
      * @param dbUtil Used to write to our DB.
+     * @param gson Used for serialization.
+     * @param excludedContributors Contributors who
      * @return BackfillContributorDataStep
      */
     @Provides
     @Singleton
-    BuildContributorDataStep provideBackfillContributorDataStep(DBUtil dbUtil,
-            Gson gson) {
+    BuildContributorDataStep provideBuildContributorDataStep(DBUtil dbUtil,
+            Gson gson,
+            @Named(DataFilterModule.EXCLUDED_CONTRIBUTOR_SET) Set<String> excludedContributors) {
         return new BuildContributorDataStep(dbUtil,
-                gson);
+                gson,
+                excludedContributors);
     }
 
     /**
@@ -208,10 +211,10 @@ public class PipelineModule extends PrivateModule {
         steps.add(buildContributorDataStep);
 
         // Create a blog post describing the recent changes
-//        steps.add(createBlogPostStep);
+        steps.add(createBlogPostStep);
 
         // Commit all the changes back to the github repository
-//        steps.add(githubCommitStep);
+        steps.add(githubCommitStep);
 
         return steps;
     }

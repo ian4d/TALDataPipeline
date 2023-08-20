@@ -5,6 +5,8 @@ import com.ianford.podcasts.model.ParsedEpisode;
 import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import com.ianford.tal.model.PipelineConfig;
 import org.apache.commons.text.StringSubstitutor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -18,6 +20,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CreateBlogPostStep implements PipelineStep {
+
+    private static final Logger logger = LogManager.getLogger();
+
     @Override
     public void run(PipelineConfig pipelineConfig) throws IOException {
         // Load post template
@@ -37,6 +42,8 @@ public class CreateBlogPostStep implements PipelineStep {
                                     .resolve(pipelineConfig.getLocalPostsDirectory()),
                             episode.getEpisodeTitle(),
                             postContent);
+                    logger.info("New Post Filename: {}",
+                            newPostFilename);
                 }
             }
 
@@ -103,7 +110,9 @@ public class CreateBlogPostStep implements PipelineStep {
                 "post");
 
         tokenMap.put("title",
-                episode.getEpisodeTitle());
+                String.format("%s - %s",
+                        episode.getEpisodeNumber(),
+                        episode.getEpisodeTitle()));
 
         // TODO: Set post body based on episode being parsed.
         tokenMap.put("content",

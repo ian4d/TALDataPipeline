@@ -70,8 +70,6 @@ public class DynamoDBModule extends PrivateModule {
     @Provides
     @Singleton
     DynamoDbEnhancedClient provideEnhancedClient(DynamoDbClient baseClient) {
-
-
         return DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(baseClient)
                 .build();
@@ -90,16 +88,14 @@ public class DynamoDBModule extends PrivateModule {
     DynamoDbTable<PodcastDBDBRecord> provideRecordTable(DynamoDbEnhancedClient enhancedClient,
             DynamoDbClient baseClient,
             @Named(EnvironmentModule.TABLE_NAME) String tableName) {
-
-
+        logger.info("Loading table with name: {}", tableName);
         DynamoDbTable<PodcastDBDBRecord> episodeTable =
                 enhancedClient.table(tableName,
                         TableSchema.fromBean(PodcastDBDBRecord.class));
 
         List<String> existingTables = baseClient.listTables()
                 .tableNames();
-
-
+        logger.info("Existing tables: {}", existingTables);
         if (existingTables.stream()
                 .anyMatch(existingTable -> existingTable.equals(tableName))) {
             return episodeTable;
@@ -125,7 +121,6 @@ public class DynamoDBModule extends PrivateModule {
             logger.info("Exception on table creation",
                     ex);
         }
-
         return episodeTable;
     }
 

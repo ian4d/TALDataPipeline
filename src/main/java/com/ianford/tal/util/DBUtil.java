@@ -155,9 +155,13 @@ public class DBUtil {
                 .map(BlogEpisodeAct::getContributorMap)
                 .flatMap(map -> map.values()
                         .stream())
-                .forEach(contributor -> episode.getContributorMap()
-                        .put(contributor.getName(),
-                                contributor));
+                .forEach(contributor -> {
+                    episode.getContributorMap()
+                            .put(contributor.getName(),
+                                    contributor);
+                    contributor.getEpisodes().put(episodeNumber,
+                            episode.getEpisodeTitle());
+                });
 
 
         return Optional.of(episode);
@@ -176,17 +180,21 @@ public class DBUtil {
                 .filter(record -> DBSortKey.CONTRIBUTOR_STATEMENT.matches(record.getSort()))
                 .collect(Collectors.toList());
         BlogEpisodeContributor contributor = new BlogEpisodeContributor(contributorName);
-        for (PodcastDBDBRecord contributorStatement : recordList) {
-            Matcher matcher = DBSortKey.CONTRIBUTOR_STATEMENT.matcher(contributorStatement.getSort());
+        for (PodcastDBDBRecord statementRecord : recordList) {
+            Matcher matcher = DBSortKey.CONTRIBUTOR_STATEMENT.matcher(statementRecord.getSort());
             if (!matcher.matches() || matcher.groupCount() != 4) continue;
 
             int episodeNumber = Integer.parseInt(matcher.group(1));
+            String episodeTitle = this.getEpisodeTitle(episodeNumber)
+                    .orElseThrow();
+
+            contributor.getEpisodes().computeIfAbsent(episodeNumber, (num) -> episodeTitle);
+
             int actNumber = Integer.parseInt(matcher.group(2));
             int statementNumber = Integer.parseInt(matcher.group(3));
             String timeStamp = matcher.group(4);
-            BlogEpisodeStatement statement = gson.fromJson(contributorStatement.getValue(),
-                    BlogEpisodeStatement.class);
 
+            BlogEpisodeStatement statement = new BlogEpisodeStatement(contributorName, statementRecord.getValue());
             contributor.getStatements()
                     .add(statement.getText());
             contributor.getSpokenWords()
