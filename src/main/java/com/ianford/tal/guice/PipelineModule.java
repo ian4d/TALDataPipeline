@@ -26,6 +26,7 @@ import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -68,7 +69,9 @@ public class PipelineModule extends PrivateModule {
             @Named(EnvironmentModule.CONTRIBUTOR_LOCAL_PATH) Path localContributorPath,
             @Named(EnvironmentModule.POSTS_LOCAL_PATH) Path localPostsPath,
             @Named(EnvironmentModule.JEKYLL_EPISODE_LIST_FILEPATH) Path episodeListFilepath,
-            @Named(EnvironmentModule.JEKYLL_CONTRIBUTOR_LIST_FILEPATH) Path contributorListFilepath) {
+            @Named(EnvironmentModule.JEKYLL_CONTRIBUTOR_LIST_FILEPATH) Path contributorListFilepath,
+                                        @Named(EnvironmentModule.TARGET_EPISODE_NUMBER)
+                                        Optional<Integer> optionalTargetEpisode) {
         PipelineConfig pipelineConfig = new PipelineConfig();
         pipelineConfig.setLocalDownloadDirectory(localDownloadPath);
         pipelineConfig.setLocalParsedEpisodeDirectory(localParsedEpisodePath);
@@ -76,6 +79,7 @@ public class PipelineModule extends PrivateModule {
         pipelineConfig.setLocalPostsDirectory(localPostsPath);
         pipelineConfig.setContributorListFilepath(contributorListFilepath);
         pipelineConfig.setEpisodeListFilepath(episodeListFilepath);
+        pipelineConfig.setOptionalTargetEpisode(optionalTargetEpisode);
         return pipelineConfig;
     }
 
@@ -191,8 +195,7 @@ public class PipelineModule extends PrivateModule {
             BuildEpisodeDataStep buildEpisodeDataStep,
             BuildContributorDataStep buildContributorDataStep,
             CreateBlogPostStep createBlogPostStep,
-            GithubCommitStep githubCommitStep
-                                           ) {
+            GithubCommitStep githubCommitStep) {
         List<PipelineStep> steps = new ArrayList<>();
 
         // Clone the website repo locally so we can make edits to it

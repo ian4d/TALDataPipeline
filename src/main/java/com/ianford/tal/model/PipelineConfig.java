@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class PipelineConfig {
@@ -25,6 +26,8 @@ public class PipelineConfig {
     private List<ParsedEpisode> parsedEpisodes = new ArrayList<>();
 
     private Set<String> contributors = new HashSet<>();
+
+    private Optional<Integer> optionalTargetEpisode = Optional.empty();
 
     // List of modified episodes
     // Title
@@ -133,5 +136,13 @@ public class PipelineConfig {
                 .resolve(this.localParsedEpisodeDirectory)
                 .resolve(String.format("episode-%s.json",
                         episodeNumber));
+    }
+
+    public Optional<Integer> getOptionalTargetEpisode() {
+        return optionalTargetEpisode;
+    }
+
+    public void setOptionalTargetEpisode(Optional<Integer> optionalTargetEpisode) {
+        this.optionalTargetEpisode = optionalTargetEpisode;
     }
 }

@@ -8,6 +8,9 @@ import com.ianford.podcasts.model.jekyll.BlogEpisode;
 import com.ianford.podcasts.model.jekyll.BlogEpisodeAct;
 import com.ianford.podcasts.model.jekyll.BlogEpisodeContributor;
 import com.ianford.podcasts.model.jekyll.BlogEpisodeStatement;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -15,8 +18,10 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +30,9 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class DBUtil {
+
+    private static final Logger logger = LogManager.getLogger();
+
     private final DynamoDbTable<PodcastDBDBRecord> table;
     private final Gson gson;
 
@@ -159,21 +167,51 @@ public class DBUtil {
                     episode.getContributorMap()
                             .put(contributor.getName(),
                                     contributor);
-                    contributor.getEpisodes().put(episodeNumber,
-                            episode.getEpisodeTitle());
+                    contributor.getEpisodes()
+                            .put(episodeNumber,
+                                    episode.getEpisodeTitle());
                 });
 
 
         return Optional.of(episode);
     }
 
+    public Set<String> getAllContributorNames() {
+        QueryEnhancedRequest queryEnhancedRequest = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.sortBeginsWith(Key.builder()
+                        .partitionValue(DBPartitionKey.CONTRIBUTOR.getValue())
+                        .sortValue("NAME")
+                        .build()))
+                .build();
+        PageIterable<PodcastDBDBRecord> contributorQueryResults = table.query(queryEnhancedRequest);
+        SdkIterable<PodcastDBDBRecord> contributorQueryResultsIterable = contributorQueryResults.items();
+        List<PodcastDBDBRecord> allContributorRecords = contributorQueryResultsIterable.stream()
+                .filter(record -> DBSortKey.CONTRIBUTOR_STATEMENT.matches(record.getSort()))
+                .sorted((recordA, recordB) -> recordA.getSort()
+                        .compareTo(recordB.getSort()))
+                .collect(Collectors.toList());
+        Set<String> resultList = new HashSet<>();
+        for (PodcastDBDBRecord contributorRecord : allContributorRecords) {
+            Matcher matcher = DBSortKey.CONTRIBUTOR_STATEMENT.matcher(contributorRecord.getSort());
+            if (!matcher.matches() || matcher.groupCount() != 5) continue;
+            Optional.ofNullable(matcher.group(1))
+                    .filter(StringUtils::isNotBlank)
+                    .filter(name -> !"null".equalsIgnoreCase(name))
+                    .map(resultList::add);
+        }
+        return resultList;
+    }
+
     public Optional<BlogEpisodeContributor> getContributor(String contributorName) {
+        logger.info("Loading records for contributor: {}",
+                contributorName);
         QueryEnhancedRequest queryEnhancedRequest = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.sortBeginsWith(Key.builder()
                         .partitionValue(DBPartitionKey.CONTRIBUTOR.format(contributorName))
-                        .sortValue("EP_")
+                        .sortValue(String.format("NAME_%s",contributorName))
                         .build()))
                 .build();
+
         PageIterable<PodcastDBDBRecord> contributorQueryResults = table.query(queryEnhancedRequest);
         SdkIterable<PodcastDBDBRecord> contributorQueryResultsIterable = contributorQueryResults.items();
         List<PodcastDBDBRecord> recordList = contributorQueryResultsIterable.stream()
@@ -182,19 +220,22 @@ public class DBUtil {
         BlogEpisodeContributor contributor = new BlogEpisodeContributor(contributorName);
         for (PodcastDBDBRecord statementRecord : recordList) {
             Matcher matcher = DBSortKey.CONTRIBUTOR_STATEMENT.matcher(statementRecord.getSort());
-            if (!matcher.matches() || matcher.groupCount() != 4) continue;
+            if (!matcher.matches() || matcher.groupCount() != 5) continue;
 
-            int episodeNumber = Integer.parseInt(matcher.group(1));
+            int episodeNumber = Integer.parseInt(matcher.group(2));
             String episodeTitle = this.getEpisodeTitle(episodeNumber)
                     .orElseThrow();
 
-            contributor.getEpisodes().computeIfAbsent(episodeNumber, (num) -> episodeTitle);
+            contributor.getEpisodes()
+                    .computeIfAbsent(episodeNumber,
+                            (num) -> episodeTitle);
 
-            int actNumber = Integer.parseInt(matcher.group(2));
-            int statementNumber = Integer.parseInt(matcher.group(3));
-            String timeStamp = matcher.group(4);
+            int actNumber = Integer.parseInt(matcher.group(3));
+            int statementNumber = Integer.parseInt(matcher.group(4));
+            String timeStamp = matcher.group(5);
 
-            BlogEpisodeStatement statement = new BlogEpisodeStatement(contributorName, statementRecord.getValue());
+            BlogEpisodeStatement statement = new BlogEpisodeStatement(contributorName,
+                    statementRecord.getValue());
             contributor.getStatements()
                     .add(statement.getText());
             contributor.getSpokenWords()

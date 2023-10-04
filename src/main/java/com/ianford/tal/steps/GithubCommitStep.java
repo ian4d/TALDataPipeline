@@ -79,7 +79,7 @@ public class GithubCommitStep implements PipelineStep {
         String commitTemplate = loadCommitTemplate();
         Map<String, String> tokenMap = new HashMap<>();
 
-        List<BlogEpisode> blogEpisodeList = pipelineConfig.getParsedEpisodes()
+        List<BlogEpisode> sortedParsedEpisodeList = pipelineConfig.getParsedEpisodes()
                 .stream()
                 .flatMap(parsedEpisode -> parsedEpisode.getEpisodeMap()
                         .values()
@@ -88,12 +88,20 @@ public class GithubCommitStep implements PipelineStep {
                         ep2.getEpisodeNumber()))
                 .collect(Collectors.toList());
 
-        String commitTitle = String.format("Episodes: %s",
-                blogEpisodeList.stream()
+        boolean episodeIsTarget = pipelineConfig.getOptionalTargetEpisode()
+                .isPresent();
+
+        String commitMessageFormat = episodeIsTarget
+                ? "Reprocessing Episodes: %s"
+                : "Episodes: %s";
+
+        String commitTitle = String.format(commitMessageFormat,
+                sortedParsedEpisodeList.stream()
                         .map(blogEpisode -> blogEpisode.getEpisodeNumber())
                         .map(String::valueOf)
                         .collect(Collectors.joining(",")));
-        String commitMessage = blogEpisodeList.stream()
+
+        String commitMessage = sortedParsedEpisodeList.stream()
                 .map(blogEpisode -> String.format("%s - %s",
                         blogEpisode.getEpisodeNumber(),
                         blogEpisode.getEpisodeTitle()))

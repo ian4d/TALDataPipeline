@@ -34,6 +34,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
     private static final String UNSPECIFIED_ROLE = "UNSPECIFIED_ROLE";
     private static final String UNSPECIFIED_NAME = "UNSPECIFIED_NAME";
     private static final String UNSPECIFIED_AIR_DATE = "UNSPECIFIED_AIR_DATE";
+    public static final String UNSPECIFIED_SPEAKER = "Unspecified";
 
     private final Function<String, Document> docLoader;
 
@@ -54,6 +55,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
     @SuppressWarnings("unchecked")
     @Override
     public Optional<ParsedEpisode> apply(Path episodeFilePath) {
+        logger.info("About to parse episode at path {}", episodeFilePath);
         final Document doc = docLoader.apply(episodeFilePath.toString());
         if (null == doc) {
             logger.info("Doc was empty at {}",
@@ -196,8 +198,9 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
 
                     // Create db record for contributor statement
                     PodcastDBDBRecord contributorStatementRecord = new PodcastDBDBRecord();
-                    contributorStatementRecord.setPrimaryKey(DBPartitionKey.CONTRIBUTOR.format(blogEpisodeStatement.getSpeakerName()));
+                    contributorStatementRecord.setPrimaryKey(DBPartitionKey.CONTRIBUTOR.getValue());
                     contributorStatementRecord.setSort(DBSortKey.CONTRIBUTOR_STATEMENT.format(
+                            blogEpisodeStatement.getSpeakerName(),
                             episodeNumber,
                             actNumber,
                             statementCountForContributor,
@@ -209,6 +212,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
             }
             actNumber++;
         }
+
         return Optional.of(new ParsedEpisode(podcastDBDBRecordList,
                 blogEpisodeMap));
     }
@@ -278,7 +282,7 @@ public class RawEpisodeParser implements Function<Path, Optional<ParsedEpisode>>
     private String extractSpeakerName(final Element element) {
         final Elements speakerNameWrapper = element.getElementsByTag("h4");
         return speakerNameWrapper.isEmpty() ?
-                null :
+                UNSPECIFIED_SPEAKER :
                 speakerNameWrapper.first()
                         .text();
     }

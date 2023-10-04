@@ -8,7 +8,6 @@ import com.ianford.tal.util.DBUtil;
 import com.ianford.tal.util.EpisodeDownloader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import java.nio.file.Path;
 
@@ -29,7 +28,6 @@ public class DownloadEpisodeStep implements PipelineStep {
      */
     public DownloadEpisodeStep(EpisodeDownloader episodeDownloader, DBUtil dbUtil) {
         this.episodeDownloader = episodeDownloader;
-
         this.dbUtil = dbUtil;
     }
 
@@ -37,24 +35,23 @@ public class DownloadEpisodeStep implements PipelineStep {
     public void run(PipelineConfig pipelineConfig) {
         logger.info("Downloading missing episodes");
 
-        // Extract episode number from most recent episode and increment by 1 for download
-        int latestEpNumber = dbUtil.getMostRecentlyParsedEpisode()
-                .map(latest -> latest + 1)
-                .orElseGet(() -> 1);
 
-        logger.info("Latest episode number: ",
-                latestEpNumber);
+        // Either get the target episode, or get the most recently parsed episode and add 1 to that.
+        int episodeToDownload;
+        if (pipelineConfig.getOptionalTargetEpisode().isPresent()) {
+            episodeToDownload = pipelineConfig.getOptionalTargetEpisode().get();
+        } else {
+            episodeToDownload = dbUtil.getMostRecentlyParsedEpisode()
+                    .map(latest -> latest + 1)
+                    .orElseGet(() -> 1);
 
-        // Write a new latest episode record to our table
-//        table.updateItem(new PodcastDBDBRecord(DBPartitionKey.PODCAST_NAME.getValue(),
-//                DBSortKey.LATEST_EPISODE.getValue(),
-//                String.valueOf(latestEpNumber)));
-        dbUtil.saveRecord(new PodcastDBDBRecord(DBPartitionKey.PODCAST_NAME.getValue(),
-                DBSortKey.LATEST_EPISODE.getValue(),
-                String.valueOf(latestEpNumber)));
-
+            // Write a new latest episode record to our table
+            dbUtil.saveRecord(new PodcastDBDBRecord(DBPartitionKey.PODCAST_NAME.getValue(),
+                    DBSortKey.LATEST_EPISODE.getValue(),
+                    String.valueOf(episodeToDownload)));
+        }
         logger.info("Now Downloading Episode {}",
-                latestEpNumber);
+                episodeToDownload);
 
         // Prepare path to downloads by resolving local paths against working directory
         Path downloadPath = pipelineConfig.getWorkingDirectory()
@@ -62,7 +59,7 @@ public class DownloadEpisodeStep implements PipelineStep {
 
         // Download the actual episode
         pipelineConfig.getDownloadedEpisodes()
-                .add(episodeDownloader.apply(latestEpNumber,
+                .add(episodeDownloader.apply(episodeToDownload,
                         downloadPath));
     }
 }

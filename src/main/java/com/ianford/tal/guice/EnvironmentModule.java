@@ -8,6 +8,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.ianford.podcasts.model.git.GitConfiguration;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,6 +35,7 @@ public class EnvironmentModule extends PrivateModule {
     public static final String CONTRIBUTOR_LOCAL_PATH = "TAL_LOCAL_CONTRIBUTORS_DIR";
     public static final String JEKYLL_EPISODE_LIST_FILEPATH = "JEKYLL_EPISODE_LIST_FILEPATH";
     public static final String JEKYLL_CONTRIBUTOR_LIST_FILEPATH = "JEKYLL_CONTRIBUTOR_LIST_FILEPATH";
+    public static final String TARGET_EPISODE_NUMBER = "TARGET_EPISODE_NUMBER";
     public static final String POSTS_LOCAL_PATH = "TAL_LOCAL_POSTS_DIR";
     private static final Logger logger = LogManager.getLogger();
     private Function<String, String> envLoader;
@@ -153,5 +155,17 @@ public class EnvironmentModule extends PrivateModule {
     @Named(AWS_SECRET_ACCESS_KEY)
     String provideAWSSecret() {
         return envLoader.apply("AWS_SECRET_ACCESS_KEY");
+    }
+
+    @Provides
+    @Exposed
+    @Singleton
+    @Named(TARGET_EPISODE_NUMBER)
+    Optional<Integer> provideTargetEpisodeNumber() {
+        String targetEpisodeNumber = envLoader.apply(TARGET_EPISODE_NUMBER);
+        if (StringUtils.isNotBlank(targetEpisodeNumber)) {
+            return Optional.of(Integer.parseInt(targetEpisodeNumber));
+        }
+        return Optional.empty();
     }
 }

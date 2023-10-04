@@ -32,7 +32,16 @@ public class CreateBlogPostStep implements PipelineStep {
 
             for (ParsedEpisode parsedEpisode : pipelineConfig.getParsedEpisodes()) {
                 Map<Integer, BlogEpisode> episodeMap = parsedEpisode.getEpisodeMap();
+
+
                 for (BlogEpisode episode : episodeMap.values()) {
+
+                    // Don't create new blog posts for episodes we're reprocessing
+                    boolean episodeIsTarget = pipelineConfig.getOptionalTargetEpisode()
+                            .map(targetEp -> targetEp == episode.getEpisodeNumber())
+                            .orElseGet(Boolean.FALSE::booleanValue);
+                    if (episodeIsTarget) continue;
+
                     String postContent = buildPostContents(postTemplate,
                             episode);
 

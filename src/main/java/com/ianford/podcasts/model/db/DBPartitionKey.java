@@ -26,8 +26,8 @@ public enum DBPartitionKey {
     /**
      * Primarily used to model statements by contributors
      */
-    CONTRIBUTOR("CONTRIBUTOR#%s",
-            "CONTRIBUTOR\\#([\\w_]+)");
+    CONTRIBUTOR("CONTRIBUTOR",
+            "CONTRIBUTOR");
 
 
     private final String value;

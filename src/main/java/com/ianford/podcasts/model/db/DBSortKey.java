@@ -64,8 +64,8 @@ public enum DBSortKey {
      * - Partition: CONTRIBUTOR#IRA_GLASS
      * - Sort: EP_1#ACT_1#STATEMENT1#TIME_00:00:00.00
      */
-    CONTRIBUTOR_STATEMENT("EP_%s#ACT_%s#STATEMENT_%s#TIME_%s",
-            "EP_(\\d+)\\#ACT_(\\d+)\\#STATEMENT_(\\d+)\\#TIME_([\\d\\:\\.]+)");
+    CONTRIBUTOR_STATEMENT("NAME_%s#EP_%s#ACT_%s#STATEMENT_%s#TIME_%s",
+            "NAME_([\\w\\s-_]+)\\#EP_(\\d+)\\#ACT_(\\d+)\\#STATEMENT_(\\d+)\\#TIME_([\\d\\:\\.]+)");
 
     private final String value;
     private final Pattern pattern;
